@@ -3,15 +3,17 @@ package markorv
 import chisel3._
 import chisel3.util._
 
+class InstrIPBundle(addr_width: Int = 64) extends Bundle {
+    val instr = Output(UInt(32.W))
+    val pc = Output(UInt(addr_width.W))
+}
+
 class InstrFetchUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
     val io = IO(new Bundle {
         val mem_read_data = Flipped(Decoupled((UInt(data_width.W))))
         val mem_read_addr = Output(UInt(addr_width.W))
 
-        val instr_bundle = Decoupled(new Bundle {
-            val instr = Output(UInt(32.W))
-            val pc_out = Output(UInt(addr_width.W))
-        })
+        val instr_bundle = Decoupled(new InstrIPBundle)
 
         val pc_in = Input(UInt(addr_width.W))
         val set_pc = Input(Bool())
@@ -60,5 +62,5 @@ class InstrFetchUnit(data_width: Int = 64, addr_width: Int = 64) extends Module 
     }.otherwise {
         pc := next_pc
     }
-    io.instr_bundle.bits.pc_out := pc
+    io.instr_bundle.bits.pc := pc
 }
