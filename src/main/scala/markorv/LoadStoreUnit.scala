@@ -33,5 +33,13 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         val rs1 = Input(UInt(5.W))
         val rs2 = Input(UInt(5.W))
         val rd = Input(UInt(5.W))
+
+        val mem_write = Decoupled(UInt(data_width.W))
+        val mem_addr = Output(UInt(addr_width.W))
     })
+
+    val io.mem_write.valid = false.Bit
+    val io.mem_write.bits = 0.U(data_width.W)
+
+    
 }

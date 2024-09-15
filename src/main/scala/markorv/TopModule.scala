@@ -11,6 +11,9 @@ class MarkoRvCore extends Module {
     val mem = Module(new Memory(64, 64, 1024))
     val instr_fetch_unit = Module(new InstrFetchUnit(64, 64))
 
+    mem.io.write_enable := false.B
+    mem.io.write_data := 0.U(64.W)
+
     instr_fetch_unit.io.mem_read_data <> mem.io.data_out
     instr_fetch_unit.io.mem_read_addr <> mem.io.addr_in
 

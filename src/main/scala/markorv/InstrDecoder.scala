@@ -22,8 +22,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
 
     opcode := io.instr.bits(6,0)
     io.instr.ready := io.lsu_opcode.ready & io.alu_opcode.ready
-    io.lsu_opcode.bits := 0.U(3.W)
-    io.alu_opcode.bits := 0.U(3.W)
+    io.lsu_opcode.bits := 0.U(4.W)
+    io.alu_opcode.bits := 0.U(4.W)
     io.lsu_opcode.valid := false.B
     io.alu_opcode.valid := false.B
     io.rs1 := 0.U(5.W)
