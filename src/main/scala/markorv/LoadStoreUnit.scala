@@ -85,8 +85,22 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 io.mem_addr := (params.source1.asUInt + params.immediate.asUInt)
                 io.mem_read.ready := true.B
                 when(io.mem_read.valid) {
-                    load_data := io.mem_read.bits
-                    // TODO
+                    val raw_data = io.mem_read.bits
+                    load_data := MuxCase(raw_data, Seq(
+                        (size === 0.U) -> Mux(is_signed, 
+                            (raw_data(7, 0).asSInt.pad(64)).asUInt,  // Sign extend byte
+                            raw_data(7, 0).pad(64)                   // Zero extend byte
+                        ),
+                        (size === 1.U) -> Mux(is_signed,
+                            (raw_data(15, 0).asSInt.pad(64)).asUInt, // Sign extend halfword
+                            raw_data(15, 0).pad(64)                  // Zero extend halfword
+                        ),
+                        (size === 2.U) -> Mux(is_signed,
+                            (raw_data(31, 0).asSInt.pad(64)).asUInt, // Sign extend word
+                            raw_data(31, 0).pad(64)                  // Zero extend word
+                        )
+                        // size === 3.U is the default case (raw_data)
+                    ))
                     state := State.stat_writeback
                 }
             }
