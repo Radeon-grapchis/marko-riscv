@@ -17,8 +17,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
         val instr_bundle = Flipped(Decoupled(new InstrIPBundle))
 
         val lsu_out = Decoupled(new Bundle {
-            // {Mem:0/Imm:1}[3]{SInt:0/UInt:1}[2]{Size}[1,0]
-            val lsu_opcode = UInt(4.W)
+            // {Load:0/Store:1}[4]{Mem:0/Imm:1}[3]{SInt:0/UInt:1}[2]{Size}[1,0]
+            val lsu_opcode = UInt(5.W)
             val params = new DecoderOutParams(data_width)
         })
 
@@ -51,7 +51,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 io.reg_read1 := instr(19,15)
                 io.reg_read2 := 0.U(5.W)
 
-                io.lsu_out.bits.lsu_opcode := Cat(0.U(1.W), instr(14,12))
+                io.lsu_out.bits.lsu_opcode := Cat(0.U(2.W), instr(14,12))
                 io.lsu_out.bits.params.immediate := instr(31,20).asSInt
                 io.lsu_out.bits.params.source1 := io.reg_data1.asSInt
                 io.lsu_out.bits.params.source2 := 0.S(data_width.W)
