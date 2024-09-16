@@ -3,6 +3,8 @@ package markorv
 import chisel3._
 import chisel3.util._
 
+import markorv.DecoderOutParams
+
 class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
     val io = IO(new Bundle {
         // lsu_opcode encoding:
@@ -26,15 +28,15 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         // Example:
         //  - lsu_opcode = 3'b101:
         //    Source = 1 (Immediate), Sign = 0 (Signed), Size = 01 (Halfword)
-        //    This means the operation uses an immediate value, with signed halfword data type.
-        val lsu_opcode = Flipped(Decoupled(UInt(4.W)))
-
-        val immediate = Input(SInt(data_width.W))
-        val rs1 = Input(UInt(5.W))
-        val rs2 = Input(UInt(5.W))
-        val rd = Input(UInt(5.W))
+        //    This means the operation uses an immediate value, with signed halfword data type. 
+        val lsu_instr = Flipped(Decoupled(new Bundle {
+            val lsu_opcode = UInt(4.W)
+            val params = new DecoderOutParams(data_width)
+        }))
 
         val mem_write = Decoupled(UInt(data_width.W))
         val mem_addr = Output(UInt(addr_width.W))
     })
+
+
 }
