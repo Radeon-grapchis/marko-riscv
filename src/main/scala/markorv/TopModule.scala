@@ -9,7 +9,7 @@ import markorv._
 class MarkoRvCore extends Module {
     val io = IO(new Bundle {
         val pc = Output(UInt(64.W))
-        val peek = Output(UInt(64.W))
+        val peek1 = Output(UInt(64.W))
     })
 
     val mem = Module(new Memory(64, 64, 1024))
@@ -29,7 +29,7 @@ class MarkoRvCore extends Module {
 
     mem.io.port2.addr <> instr_fetch_unit.io.mem_read_addr
     mem.io.port2.data_out <> instr_fetch_unit.io.mem_read_data
-    io.peek <> mem.io.peek
+    io.peek1 <> mem.io.peek
 
     instr_decoder.io.reg_read1 <> register_file.io.read_addr1
     instr_decoder.io.reg_read2 <> register_file.io.read_addr2

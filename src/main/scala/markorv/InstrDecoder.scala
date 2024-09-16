@@ -59,6 +59,19 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
 
                 io.lsu_out.valid := true.B
             }
+            is("b0100011".U) {
+                // Store Memory
+                io.reg_read1 := instr(19,15)
+                io.reg_read2 := 0.U(5.W)
+
+                io.lsu_out.bits.lsu_opcode := Cat("b10".U, instr(14,12))
+                io.lsu_out.bits.params.immediate := instr(31,20).asSInt
+                io.lsu_out.bits.params.source1 := io.reg_data1.asSInt
+                io.lsu_out.bits.params.source2 := 0.S(data_width.W)
+                io.lsu_out.bits.params.rd := instr(11,7)
+
+                io.lsu_out.valid := true.B
+            }
         }
     }
 }

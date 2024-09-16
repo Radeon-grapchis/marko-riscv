@@ -2,6 +2,7 @@ package markorv
 
 import chisel3._
 import chisel3.util._
+import chisel3.util.experimental.loadMemoryFromFileInline
 
 class MemoryIO(data_width: Int, addr_width: Int) extends Bundle {
   val addr = Input(UInt(addr_width.W))
@@ -34,7 +35,7 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 1024) exten
   io.port2.data_out.bits := 0.U
   io.port2.data_out.valid := false.B
 
-  io.peek := mem(size-1)
+  io.peek := mem(0)
 
   when(arbiter.io.chosen === 0.U) {
     when(io.port1.write_enable) {

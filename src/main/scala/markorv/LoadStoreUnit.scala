@@ -105,10 +105,21 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         }
 
         is(State.stat_store) {
-            io.mem_addr := (params.source1.asUInt + params.immediate.asUInt)
-            io.mem_write.bits := params.source2.asUInt
+            val size = opcode(1, 0)
+            val store_data = params.source2.asUInt
+            val aligned_addr = (params.source1.asUInt + params.immediate.asUInt) & ~((1.U << size) - 1.U)
+            
+            io.mem_addr := aligned_addr
             io.mem_write.valid := true.B
-            when(io.mem_write.valid) {
+
+            io.mem_write.bits := MuxCase(store_data, Seq(
+                (size === 0.U) -> store_data(7, 0).pad(64),
+                (size === 1.U) -> store_data(15, 0).pad(64),
+                (size === 2.U) -> store_data(31, 0).pad(64)
+                // size === 3.U is the default case (raw_data)
+            ))
+
+            when(io.mem_write.ready) {
                 state := State.stat_idle
             }
         }
