@@ -34,11 +34,9 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         val mem_read = Flipped(Decoupled((UInt(data_width.W))))
         val mem_addr = Output(UInt(addr_width.W))
 
-        val write_back = Decoupled(new Bundle {
-            val write_back_enable = Output(Bool())
-            val write_back_data = Output(UInt(data_width.W))
-            val write_register = Output(UInt(5.W))
-        })
+        val write_back_enable = Output(Bool())
+        val write_back_data = Output(UInt(data_width.W))
+        val write_register = Output(UInt(5.W))
     })
 
     // State def
@@ -59,9 +57,9 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
     io.lsu_instr.ready := false.B
     io.mem_read.ready := false.B
 
-    io.write_back.bits.write_back_enable := false.B
-    io.write_back.bits.write_back_data := 0.U(data_width.W)
-    io.write_back.bits.write_register := 0.U(5.W)
+    io.write_back_enable := false.B
+    io.write_back_data := 0.U(data_width.W)
+    io.write_register := 0.U(5.W)
 
     switch(state) {
         is(State.stat_idle) {
@@ -116,13 +114,10 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         }
 
         is(State.stat_writeback) {
-            io.write_back.bits.write_back_enable := true.B
-            io.write_back.bits.write_back_data := load_data
-            io.write_back.bits.write_register := params.rd
-            io.write_back.valid := true.B
-            when(io.write_back.valid) {
-                state := State.stat_idle
-            }
+            io.write_back_enable := true.B
+            io.write_back_data := load_data
+            io.write_register := params.rd
+            state := State.stat_idle
         }
     }
 }
