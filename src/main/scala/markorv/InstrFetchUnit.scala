@@ -49,7 +49,7 @@ class InstrFetchUnit(data_width: Int = 64, addr_width: Int = 64) extends Module 
         io.instr_bundle.bits.instr := selected_bits
 
         buffer_at := buffer_at + 1.U
-        buffer_valid := (buffer_at === (log2Ceil(data_width / 32).U - 1.U))
+        buffer_valid := (buffer_at =/= log2Ceil(data_width / 32).U)
         next_pc := pc + 4.U
     }.otherwise {
         next_pc := pc
