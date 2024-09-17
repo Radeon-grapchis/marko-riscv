@@ -2,11 +2,6 @@ package markorv
 
 import chisel3._
 import chisel3.util._
-import chisel3.util.experimental.loadMemoryFromFileInline
-
-import chisel3._
-import chisel3.util._
-import chisel3.util.experimental.loadMemoryFromFileInline
 
 class MemoryIO(data_width: Int, addr_width: Int) extends Bundle {
   val addr = Input(UInt(addr_width.W))
@@ -15,7 +10,7 @@ class MemoryIO(data_width: Int, addr_width: Int) extends Bundle {
   val write_data = Input(UInt(data_width.W))
 }
 
-class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 1024) extends Module {
+class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extends Module {
     val io = IO(new Bundle {
         val port1 = new MemoryIO(data_width, addr_width)
         val port2 = new MemoryIO(data_width, addr_width)
@@ -23,6 +18,20 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 1024) exten
     })
 
     val mem = Mem(size, UInt(8.W))
+
+    // Little endian
+    val init_values = Seq(
+        "h00800083".U(32.W),
+        "h06100FA3".U(32.W),
+        "hAAAAAAFB".U(32.W),
+        "hAAAAAAAA".U(32.W)
+    )
+
+    for (i <- 0 until init_values.length) {
+        for (j <- 0 until 4) {
+            mem(i * 4 + j) := (init_values(i) >> (j * 8))(7, 0)
+        }
+    }
 
     val arbiter = Module(new Arbiter(Bool(), 2))
     arbiter.io.in(0).valid := io.port1.write_enable || io.port1.data_out.ready
@@ -39,15 +48,15 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 1024) exten
     io.port2.data_out.bits := 0.U
     io.port2.data_out.valid := false.B
 
-    io.peek := mem(0)
+    io.peek := mem(127)
 
     when(arbiter.io.chosen === 0.U) {
         when(io.port1.write_enable) {
             for (i <- 0 until data_width / 8) {
-                mem(io.port1.addr + i.U) := io.port1.write_data((i + 1) * 8 - 1, i * 8)
+                mem(io.port1.addr + i.U) := io.port1.write_data((data_width / 8 - 1 - i) * 8 + 7, (data_width / 8 - 1 - i) * 8)
             }
         }.elsewhen(io.port1.data_out.ready) {
-            io.port1.data_out.bits := Cat((0 until data_width / 8).map(i => mem(io.port1.addr + i.U)))
+            io.port1.data_out.bits := Cat((0 until data_width / 8).reverse.map(i => mem(io.port1.addr + i.U)))
             io.port1.data_out.valid := true.B
         }
     }
@@ -55,10 +64,10 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 1024) exten
     when(arbiter.io.chosen === 1.U) {
         when(io.port2.write_enable) {
             for (i <- 0 until data_width / 8) {
-                mem(io.port2.addr + i.U) := io.port2.write_data((i + 1) * 8 - 1, i * 8)
+                mem(io.port2.addr + i.U) := io.port2.write_data((data_width / 8 - 1 - i) * 8 + 7, (data_width / 8 - 1 - i) * 8)
             }
         }.elsewhen(io.port2.data_out.ready) {
-            io.port2.data_out.bits := Cat((0 until data_width / 8).map(i => mem(io.port2.addr + i.U)))
+            io.port2.data_out.bits := Cat((0 until data_width / 8).reverse.map(i => mem(io.port2.addr + i.U)))
             io.port2.data_out.valid := true.B
         }
     }

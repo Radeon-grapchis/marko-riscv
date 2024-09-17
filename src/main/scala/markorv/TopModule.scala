@@ -9,10 +9,11 @@ import markorv._
 class MarkoRvCore extends Module {
     val io = IO(new Bundle {
         val pc = Output(UInt(64.W))
-        val peek1 = Output(UInt(64.W))
+        val instr_now = Output(UInt(64.W))
+        val peek = Output(UInt(64.W))
     })
 
-    val mem = Module(new Memory(64, 64, 1024))
+    val mem = Module(new Memory(64, 64, 128))
     val instr_fetch_unit = Module(new InstrFetchUnit)
     val instr_decoder = Module(new InstrDecoder)
     val load_store_unit = Module(new LoadStoreUnit)
@@ -29,12 +30,13 @@ class MarkoRvCore extends Module {
 
     mem.io.port2.addr <> instr_fetch_unit.io.mem_read_addr
     mem.io.port2.data_out <> instr_fetch_unit.io.mem_read_data
-    io.peek1 <> mem.io.peek
+    io.instr_now <> instr_fetch_unit.io.instr_bundle.bits.instr
+    io.peek <> instr_decoder.io.reg_read2
 
     instr_decoder.io.reg_read1 <> register_file.io.read_addr1
     instr_decoder.io.reg_read2 <> register_file.io.read_addr2
     instr_decoder.io.reg_data1 <> register_file.io.read_data1
-    instr_decoder.io.reg_data2 <> register_file.io.read_data1
+    instr_decoder.io.reg_data2 <> register_file.io.read_data2
 
     load_store_unit.io.write_register <> register_file.io.write_addr
     load_store_unit.io.write_back_data <> register_file.io.write_data
@@ -44,8 +46,8 @@ class MarkoRvCore extends Module {
     mem.io.port1.data_out <> load_store_unit.io.mem_read
     mem.io.port1.addr <> load_store_unit.io.mem_addr
 
-    PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, true.B, false.B)
-    PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, true.B, false.B)
+    PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, false.B, false.B)
+    PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, load_store_unit.io.state_peek === 0.U , false.B)
 }
 
 object MarkoRvCore extends App {

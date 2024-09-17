@@ -41,18 +41,20 @@ class InstrFetchUnit(data_width: Int = 64, addr_width: Int = 64) extends Module 
             buffer_at := 0.U
         }
         next_pc := pc
-    }.elsewhen(io.instr_bundle.ready) {
+    }.otherwise {
         io.instr_bundle.valid := true.B
 
         val shifted_buffer = instr_buffer >> (buffer_at * 32.U)
         val selected_bits = shifted_buffer(31, 0)
         io.instr_bundle.bits.instr := selected_bits
 
-        buffer_at := buffer_at + 1.U
-        buffer_valid := (buffer_at =/= log2Ceil(data_width / 32).U)
-        next_pc := pc + 4.U
-    }.otherwise {
-        next_pc := pc
+        when(io.instr_bundle.ready) {
+            buffer_at := buffer_at + 1.U
+            buffer_valid := (buffer_at =/= log2Ceil(data_width / 32).U)
+            next_pc := pc + 4.U
+        }.otherwise {
+            next_pc := pc
+        }
     }
 
     when(io.set_pc) {
