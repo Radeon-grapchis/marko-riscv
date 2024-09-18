@@ -8,6 +8,7 @@ class MemoryIO(data_width: Int, addr_width: Int) extends Bundle {
   val data_out = Decoupled(UInt(data_width.W))
   val write_enable = Input(Bool())
   val write_data = Input(UInt(data_width.W))
+  val write_outfire = Output(Bool())
 }
 
 class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extends Module {
@@ -45,8 +46,10 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
 
     io.port1.data_out.bits := 0.U
     io.port1.data_out.valid := false.B
+    io.port1.write_outfire := false.B
     io.port2.data_out.bits := 0.U
     io.port2.data_out.valid := false.B
+    io.port2.write_outfire := false.B
 
     io.peek := mem(127)
 
@@ -55,6 +58,7 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
             for (i <- 0 until data_width / 8) {
                 mem(io.port1.addr + i.U) := io.port1.write_data((data_width / 8 - 1 - i) * 8 + 7, (data_width / 8 - 1 - i) * 8)
             }
+            io.port1.write_outfire := true.B
         }.elsewhen(io.port1.data_out.ready) {
             io.port1.data_out.bits := Cat((0 until data_width / 8).reverse.map(i => mem(io.port1.addr + i.U)))
             io.port1.data_out.valid := true.B
@@ -66,6 +70,7 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
             for (i <- 0 until data_width / 8) {
                 mem(io.port2.addr + i.U) := io.port2.write_data((data_width / 8 - 1 - i) * 8 + 7, (data_width / 8 - 1 - i) * 8)
             }
+            io.port2.write_outfire := true.B
         }.elsewhen(io.port2.data_out.ready) {
             io.port2.data_out.bits := Cat((0 until data_width / 8).reverse.map(i => mem(io.port2.addr + i.U)))
             io.port2.data_out.valid := true.B

@@ -33,6 +33,7 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         val mem_write = Decoupled(UInt(data_width.W))
         val mem_read = Flipped(Decoupled((UInt(data_width.W))))
         val mem_addr = Output(UInt(addr_width.W))
+        val mem_write_outfire = Input(Bool())
 
         val write_back_enable = Output(Bool())
         val write_back_data = Output(UInt(data_width.W))
@@ -126,7 +127,7 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 // size === 3.U is the default case (raw_data)
             ))
 
-            when(io.mem_write.ready) {
+            when(io.mem_write.ready && io.mem_write_outfire) {
                 state := State.stat_idle
             }
         }

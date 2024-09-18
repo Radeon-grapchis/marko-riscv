@@ -16,6 +16,8 @@ class RegFile(data_width: Int = 64) extends Module {
         val release_reg = Input(UInt(5.W))
         val acquire_reg = Input(UInt(5.W))
         val acquired = Output(Bool())
+
+        val peek_occupied = Output(UInt(32.W))
     })
     val reg_acquire_flags = RegInit(0.U(32.W))
     val regs = RegInit(VecInit(Seq.fill(32)(0.U(data_width.W))))
@@ -24,6 +26,7 @@ class RegFile(data_width: Int = 64) extends Module {
     io.read_data2 := Mux(io.read_addr2 === 0.U, 0.U, regs(io.read_addr2))
 
     io.acquired := false.B
+    io.peek_occupied := reg_acquire_flags
 
     when(io.write_enable && io.write_addr =/= 0.U) {
         regs(io.write_addr) := io.write_data

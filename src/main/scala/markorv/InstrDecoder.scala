@@ -29,6 +29,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
 
         val acquire_reg = Output(UInt(5.W))
         val acquired = Input(Bool())
+        val occupied_regs = Input(UInt(32.W))
     })
 
     val instr = Wire(UInt(32.W))
@@ -36,12 +37,14 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
     val acquire_reg = Wire(UInt(5.W))
     val next_stage_ready = Wire(Bool())
     val valid_instr = Wire(Bool())
+    val occupied_reg = Wire(Bool())
 
     instr := io.instr_bundle.bits.instr
     opcode := instr(6,0)
     acquire_reg := 0.U
     next_stage_ready := io.lsu_out.ready
     valid_instr := false.B
+    occupied_reg := false.B
 
     io.instr_bundle.ready := next_stage_ready
     io.reg_read1 := 0.U(addr_width.W)
@@ -62,6 +65,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 io.reg_read1 := instr(19,15)
                 io.reg_read2 := 0.U(5.W)
 
+                occupied_reg := io.occupied_regs(instr(19,15))
+
                 io.lsu_out.bits.lsu_opcode := Cat(0.U(2.W), instr(14,12))
                 io.lsu_out.bits.params.immediate := instr(31,20).asSInt
                 io.lsu_out.bits.params.source1 := io.reg_data1.asSInt
@@ -77,6 +82,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 io.reg_read1 := instr(19,15)
                 io.reg_read2 := instr(24,20)
 
+                occupied_reg := io.occupied_regs(instr(19,15)) | io.occupied_regs(instr(24,20))
+
                 io.lsu_out.bits.lsu_opcode := Cat("b10".U, instr(14,12))
                 io.lsu_out.bits.params.immediate := Cat(instr(31,25),instr(11,7)).asSInt
                 io.lsu_out.bits.params.source1 := io.reg_data1.asSInt
@@ -91,7 +98,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
     when(next_stage_ready) {
         io.acquire_reg := acquire_reg
     }
-    when(io.acquired && io.instr_bundle.valid && valid_instr) {
+    when(io.acquired && io.instr_bundle.valid && valid_instr && (~occupied_reg)) {
         io.lsu_out.valid := true.B
     }
 }
