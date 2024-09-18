@@ -8,6 +8,7 @@ class MemoryIO(data_width: Int, addr_width: Int) extends Bundle {
   val data_out = Decoupled(UInt(data_width.W))
   val write_enable = Input(Bool())
   val write_data = Input(UInt(data_width.W))
+  val write_width = Input(UInt(2.W))
   val write_outfire = Output(Bool())
 }
 
@@ -55,8 +56,25 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
 
     when(arbiter.io.chosen === 0.U) {
         when(io.port1.write_enable) {
-            for (i <- 0 until data_width / 8) {
-                mem(io.port1.addr + i.U) := io.port1.write_data((data_width / 8 - 1 - i) * 8 + 7, (data_width / 8 - 1 - i) * 8)
+            switch(io.port1.write_width) {
+                is(0.U) {
+                    mem(io.port1.addr) := io.port1.write_data(7, 0)
+                }
+                is(1.U) {
+                    for (i <- 0 until 2) {
+                        mem(io.port1.addr + i.U) := io.port1.write_data((1 - i) * 8 + 7, (1 - i) * 8) // 小端序写入
+                    }
+                }
+                is(2.U) {
+                    for (i <- 0 until 4) {
+                        mem(io.port1.addr + i.U) := io.port1.write_data((3 - i) * 8 + 7, (3 - i) * 8) // 小端序写入
+                    }
+                }
+                is(3.U) {
+                    for (i <- 0 until 8) {
+                        mem(io.port1.addr + i.U) := io.port1.write_data((7 - i) * 8 + 7, (7 - i) * 8) // 小端序写入
+                    }
+                }
             }
             io.port1.write_outfire := true.B
         }.elsewhen(io.port1.data_out.ready) {
@@ -67,8 +85,25 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
 
     when(arbiter.io.chosen === 1.U) {
         when(io.port2.write_enable) {
-            for (i <- 0 until data_width / 8) {
-                mem(io.port2.addr + i.U) := io.port2.write_data((data_width / 8 - 1 - i) * 8 + 7, (data_width / 8 - 1 - i) * 8)
+            switch(io.port2.write_width) {
+                is(0.U) {
+                    mem(io.port2.addr) := io.port2.write_data(7, 0)
+                }
+                is(1.U) {
+                    for (i <- 0 until 2) {
+                        mem(io.port2.addr + i.U) := io.port2.write_data((1 - i) * 8 + 7, (1 - i) * 8) // 小端序写入
+                    }
+                }
+                is(2.U) {
+                    for (i <- 0 until 4) {
+                        mem(io.port2.addr + i.U) := io.port2.write_data((3 - i) * 8 + 7, (3 - i) * 8) // 小端序写入
+                    }
+                }
+                is(3.U) {
+                    for (i <- 0 until 8) {
+                        mem(io.port2.addr + i.U) := io.port2.write_data((7 - i) * 8 + 7, (7 - i) * 8) // 小端序写入
+                    }
+                }
             }
             io.port2.write_outfire := true.B
         }.elsewhen(io.port2.data_out.ready) {

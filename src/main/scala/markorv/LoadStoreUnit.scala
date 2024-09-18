@@ -34,6 +34,7 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         val mem_read = Flipped(Decoupled((UInt(data_width.W))))
         val mem_addr = Output(UInt(addr_width.W))
         val mem_write_outfire = Input(Bool())
+        val mem_write_width = Output(UInt(2.W))
 
         val write_back_enable = Output(Bool())
         val write_back_data = Output(UInt(data_width.W))
@@ -61,6 +62,7 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
     io.mem_write.valid := false.B
     io.lsu_instr.ready := false.B
     io.mem_read.ready := false.B
+    io.mem_write_width := 0.U(2.W)
 
     io.write_back_enable := false.B
     io.write_back_data := 0.U(data_width.W)
@@ -119,6 +121,7 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
             
             io.mem_addr := (params.source1.asUInt + params.immediate.asUInt)
             io.mem_write.valid := true.B
+            io.mem_write_width := size
 
             io.mem_write.bits := MuxCase(store_data, Seq(
                 (size === 0.U) -> store_data(7, 0).pad(64),

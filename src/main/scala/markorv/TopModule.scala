@@ -13,7 +13,7 @@ class MarkoRvCore extends Module {
         val peek = Output(UInt(64.W))
     })
 
-    val mem = Module(new Memory(64, 64, 128))
+    val mem = Module(new Memory(64, 64, 256))
     val instr_fetch_unit = Module(new InstrFetchUnit)
     val instr_decoder = Module(new InstrDecoder)
     val load_store_unit = Module(new LoadStoreUnit)
@@ -25,6 +25,7 @@ class MarkoRvCore extends Module {
 
     mem.io.port2.write_enable := false.B
     mem.io.port2.write_data := 0.U(64.W)
+    mem.io.port2.write_width := 0.U(2.W)
 
     load_store_unit.io.mem_write.ready := true.B
 
@@ -50,6 +51,7 @@ class MarkoRvCore extends Module {
     mem.io.port1.data_out <> load_store_unit.io.mem_read
     mem.io.port1.addr <> load_store_unit.io.mem_addr
     mem.io.port1.write_outfire <> load_store_unit.io.mem_write_outfire
+    mem.io.port1.write_width <> load_store_unit.io.mem_write_width
 
     PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, false.B, false.B)
     PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, load_store_unit.io.state_peek === 0.U , false.B)
