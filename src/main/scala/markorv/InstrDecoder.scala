@@ -40,6 +40,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
     val next_stage_ready = Wire(Bool())
     val valid_instr = Wire(Bool())
     val occupied_reg = Wire(Bool())
+    // 0 for lsu 1 for alu
+    val instr_for = Wire(Bool())
 
     instr := io.instr_bundle.bits.instr
     opcode := instr(6,0)
@@ -47,6 +49,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
     next_stage_ready := io.lsu_out.ready
     valid_instr := false.B
     occupied_reg := false.B
+    instr_for := false.B
 
     io.instr_bundle.ready := false.B
     io.outfire := false.B
