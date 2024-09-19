@@ -1,7 +1,7 @@
 ### TODO List（Instruction）
 
 #### Immediate Instructions
-- [ ] lui
+- [x] lui
 - [x] auipc
 - [ ] addi
 - [ ] addiw

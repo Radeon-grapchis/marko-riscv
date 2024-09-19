@@ -27,8 +27,8 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
         "h00000013".U(32.W),
         "h00000013".U(32.W),
         "h00000013".U(32.W),
-        "h00000097".U(32.W),
-        "h06100fa3".U(32.W),
+        "h123450b7".U(32.W),
+        "h06103c23".U(32.W),
     )
 
     for (i <- 0 until init_values.length) {
@@ -54,7 +54,7 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
     io.port2.data_out.valid := false.B
     io.port2.write_outfire := false.B
 
-    io.peek := mem(127)
+    io.peek := Cat(mem(120),mem(121),mem(122),mem(123),mem(124),mem(125),mem(126),mem(127))
 
     when(arbiter.io.chosen === 0.U) {
         when(io.port1.write_enable) {
