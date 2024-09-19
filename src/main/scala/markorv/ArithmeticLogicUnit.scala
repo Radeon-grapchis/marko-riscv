@@ -23,15 +23,17 @@ class ArithmeticLogicUnit extends Module {
     io.write_back.bits.reg := 0.U
     io.write_back.bits.data := 0.U
 
+    val ALU_NOP = "b00000".U
     val ALU_ADD = "b00001".U
     val ALU_SUB = "b00010".U
 
-    switch(io.alu_instr.bits.alu_opcode) {
-        is(ALU_ADD) {
-
-        }
-        is(ALU_SUB) {
-
+    when(io.alu_instr.valid) {
+        switch(io.alu_instr.bits.alu_opcode) {
+            is(ALU_ADD) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                io.write_back.bits.data := io.alu_instr.bits.params.source1 + io.alu_instr.bits.params.source2
+            }
         }
     }
 }

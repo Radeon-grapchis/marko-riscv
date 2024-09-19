@@ -58,6 +58,7 @@ class MarkoRvCore extends Module {
 
     PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, instr_decoder.io.outfire, false.B)
     PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, load_store_unit.io.state_peek === 0.U , false.B)
+    PipelineConnect(instr_decoder.io.alu_out, arithmetic_logic_unit.io.alu_instr, true.B , false.B)
     PipelineConnect(load_store_unit.io.write_back, write_back.io.write_back1, write_back.io.outfire1, false.B)
     PipelineConnect(arithmetic_logic_unit.io.write_back, write_back.io.write_back2, write_back.io.outfire2, false.B)
 }
