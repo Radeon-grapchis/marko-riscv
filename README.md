@@ -3,7 +3,7 @@
 #### Immediate Instructions
 - [x] lui
 - [x] auipc
-- [ ] addi
+- [x] addi
 - [ ] addiw
 - [ ] slti
 - [ ] sltiu

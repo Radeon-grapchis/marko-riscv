@@ -138,6 +138,20 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 valid_instr := true.B
                 instr_for := 0.U
             }
+            is("b0010011".U) {
+                // addi
+                io.reg_read1 := instr(19,15)
+
+                io.alu_out.bits.alu_opcode := 1.U
+                io.alu_out.bits.params.source1 := (instr(31,20).asSInt.pad(64)).asUInt
+                io.alu_out.bits.params.source2 := io.reg_data1
+                io.alu_out.bits.params.rd := instr(11,7)
+
+                acquire_reg := instr(11,7)
+
+                valid_instr := true.B
+                instr_for := 0.U
+            }
         }
     }
 
