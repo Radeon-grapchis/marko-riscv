@@ -12,11 +12,11 @@ HEXES = $(BINS:.bin=.hex)
 
 gen-tests: $(HEXES)
 %.o: %.S
-    $(AS) -o $@ $<
+	$(AS) -o $@ $<
 %.bin: %.o
-    $(OBJCOPY) -O binary $< $@
+	$(OBJCOPY) -O binary $< $@
 %.hex: %.bin
-    $(XXD) -p $< | $(FOLD) -w 8 | $(AWK) '{print substr($$0, 7, 2) substr($$0, 5, 2) substr($$0, 3, 2) substr($$0, 1, 2)}' > $@
+	$(XXD) -p $< | $(FOLD) -w 8 | $(AWK) '{print substr($$0, 7, 2) substr($$0, 5, 2) substr($$0, 3, 2) substr($$0, 1, 2)}' > $@
 
 clean:
-    rm -f $(OBJS) $(BINS) $(HEXES)
+	rm -f $(OBJS) $(BINS) $(HEXES)
