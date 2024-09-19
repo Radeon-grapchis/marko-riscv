@@ -26,7 +26,11 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
         "h00800083".U(32.W),
         "h06100FA3".U(32.W),
         "hAAAAAAFB".U(32.W),
-        "hAAAAAAAA".U(32.W)
+        "hAAAAAAAA".U(32.W),
+        "h00000001".U(32.W),
+        "h00000002".U(32.W),
+        "h00000003".U(32.W),
+        "h00000004".U(32.W)
     )
 
     for (i <- 0 until init_values.length) {
@@ -62,17 +66,17 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
                 }
                 is(1.U) {
                     for (i <- 0 until 2) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((1 - i) * 8 + 7, (1 - i) * 8) // 小端序写入
+                        mem(io.port1.addr + i.U) := io.port1.write_data((1 - i) * 8 + 7, (1 - i) * 8)
                     }
                 }
                 is(2.U) {
                     for (i <- 0 until 4) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((3 - i) * 8 + 7, (3 - i) * 8) // 小端序写入
+                        mem(io.port1.addr + i.U) := io.port1.write_data((3 - i) * 8 + 7, (3 - i) * 8)
                     }
                 }
                 is(3.U) {
                     for (i <- 0 until 8) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((7 - i) * 8 + 7, (7 - i) * 8) // 小端序写入
+                        mem(io.port1.addr + i.U) := io.port1.write_data((7 - i) * 8 + 7, (7 - i) * 8)
                     }
                 }
             }
@@ -91,17 +95,17 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
                 }
                 is(1.U) {
                     for (i <- 0 until 2) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((1 - i) * 8 + 7, (1 - i) * 8) // 小端序写入
+                        mem(io.port2.addr + i.U) := io.port2.write_data((1 - i) * 8 + 7, (1 - i) * 8)
                     }
                 }
                 is(2.U) {
                     for (i <- 0 until 4) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((3 - i) * 8 + 7, (3 - i) * 8) // 小端序写入
+                        mem(io.port2.addr + i.U) := io.port2.write_data((3 - i) * 8 + 7, (3 - i) * 8)
                     }
                 }
                 is(3.U) {
                     for (i <- 0 until 8) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((7 - i) * 8 + 7, (7 - i) * 8) // 小端序写入
+                        mem(io.port2.addr + i.U) := io.port2.write_data((7 - i) * 8 + 7, (7 - i) * 8)
                     }
                 }
             }

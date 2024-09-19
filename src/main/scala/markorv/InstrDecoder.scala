@@ -30,6 +30,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
         val acquire_reg = Output(UInt(5.W))
         val acquired = Input(Bool())
         val occupied_regs = Input(UInt(32.W))
+
+        val outfire = Output(Bool())
     })
 
     val instr = Wire(UInt(32.W))
@@ -46,7 +48,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
     valid_instr := false.B
     occupied_reg := false.B
 
-    io.instr_bundle.ready := next_stage_ready
+    io.instr_bundle.ready := false.B
+    io.outfire := false.B
     io.reg_read1 := 0.U(addr_width.W)
     io.reg_read2 := 0.U(addr_width.W)
     io.acquire_reg := 0.U(5.W)
@@ -100,5 +103,10 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
     }
     when(io.acquired && io.instr_bundle.valid && valid_instr && (~occupied_reg)) {
         io.lsu_out.valid := true.B
+        io.instr_bundle.ready := true.B
+        io.outfire := true.B
+    }
+    when(~valid_instr) {
+        io.instr_bundle.ready := true.B
     }
 }

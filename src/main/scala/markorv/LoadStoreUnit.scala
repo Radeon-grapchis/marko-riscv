@@ -35,11 +35,11 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         val mem_addr = Output(UInt(addr_width.W))
         val mem_write_outfire = Input(Bool())
         val mem_write_width = Output(UInt(2.W))
-
-        val write_back_enable = Output(Bool())
-        val write_back_data = Output(UInt(data_width.W))
-        val write_register = Output(UInt(5.W))
-        val release_reg = Output(UInt(5.W))
+        
+        val write_back = Decoupled(new Bundle {
+            val reg = Input(UInt(5.W))
+            val data = Input(UInt(64.W))
+        })
 
         val state_peek = Output(UInt(3.W))
         val debug_peek = Output(UInt(64.W))
@@ -64,17 +64,16 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
     io.mem_read.ready := false.B
     io.mem_write_width := 0.U(2.W)
 
-    io.write_back_enable := false.B
-    io.write_back_data := 0.U(data_width.W)
-    io.write_register := 0.U(5.W)
-    io.release_reg := 0.U(5.W)
+    io.write_back.valid := false.B
+    io.write_back.bits.data := 0.U(data_width.W)
+    io.write_back.bits.reg := 0.U(5.W)
 
     io.state_peek := state.asUInt
     io.debug_peek := params.source2.asUInt
 
     switch(state) {
         is(State.stat_idle) {
-            io.lsu_instr.ready := true.B
+            io.lsu_instr.ready := io.write_back.ready
             when(io.lsu_instr.valid) {
                 opcode := io.lsu_instr.bits.lsu_opcode
                 params := io.lsu_instr.bits.params
@@ -136,11 +135,12 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         }
 
         is(State.stat_writeback) {
-            io.write_back_enable := true.B
-            io.write_back_data := load_data
-            io.write_register := params.rd
-            io.release_reg := params.rd
-            state := State.stat_idle
+            when(io.write_back.ready) {
+                io.write_back.valid := true.B
+                io.write_back.bits.data := load_data
+                io.write_back.bits.reg := params.rd
+                state := State.stat_idle
+            }
         }
     }
 }

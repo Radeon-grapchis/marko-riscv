@@ -18,6 +18,7 @@ class MarkoRvCore extends Module {
     val instr_decoder = Module(new InstrDecoder)
     val load_store_unit = Module(new LoadStoreUnit)
     val register_file = Module(new RegFile)
+    val write_back = Module(new WriteBack)
 
     io.pc := instr_fetch_unit.io.instr_bundle.bits.pc
     instr_fetch_unit.io.pc_in := 0.U(64.W)
@@ -42,10 +43,6 @@ class MarkoRvCore extends Module {
     instr_decoder.io.acquired <> register_file.io.acquired
     instr_decoder.io.occupied_regs <> register_file.io.peek_occupied
 
-    load_store_unit.io.write_register <> register_file.io.write_addr
-    load_store_unit.io.write_back_data <> register_file.io.write_data
-    load_store_unit.io.write_back_enable <> register_file.io.write_enable
-    load_store_unit.io.release_reg <> register_file.io.release_reg
     mem.io.port1.write_data <> load_store_unit.io.mem_write.bits
     mem.io.port1.write_enable <> load_store_unit.io.mem_write.valid
     mem.io.port1.data_out <> load_store_unit.io.mem_read
@@ -53,8 +50,12 @@ class MarkoRvCore extends Module {
     mem.io.port1.write_outfire <> load_store_unit.io.mem_write_outfire
     mem.io.port1.write_width <> load_store_unit.io.mem_write_width
 
-    PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, false.B, false.B)
+    write_back.io.reg_write <> register_file.io.write_addr
+    write_back.io.write_data <> register_file.io.write_data
+
+    PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, instr_decoder.io.outfire, false.B)
     PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, load_store_unit.io.state_peek === 0.U , false.B)
+    PipelineConnect(load_store_unit.io.write_back, write_back.io.write_back1, write_back.io.outfire1, false.B)
 }
 
 object MarkoRvCore extends App {
