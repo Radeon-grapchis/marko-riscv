@@ -151,7 +151,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                     io.alu_out.bits.alu_opcode := "b01011".U
                     io.alu_out.bits.params.source2 := (instr(25,20).asSInt.pad(64)).asUInt
                 }.elsewhen(instr(14,12)==="b101".U) {
-                    //srli
+                    // srli
                     io.alu_out.bits.alu_opcode := "b01010".U
                     io.alu_out.bits.params.source2 := (instr(25,20).asSInt.pad(64)).asUInt
                 }.otherwise{
@@ -179,7 +179,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                     io.alu_out.bits.alu_opcode := "b11011".U
                     io.alu_out.bits.params.source2 := (instr(25,20).asSInt.pad(64)).asUInt
                 }.elsewhen(instr(14,12)==="b101".U) {
-                    //srliw
+                    // srliw
                     io.alu_out.bits.alu_opcode := "b11010".U
                     io.alu_out.bits.params.source2 := (instr(25,20).asSInt.pad(64)).asUInt
                 }.otherwise{
@@ -187,6 +187,64 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                     io.alu_out.bits.params.source2 := (instr(31,20).asSInt.pad(64)).asUInt
                 }
                 io.alu_out.bits.params.source1 := io.reg_data1
+                io.alu_out.bits.params.rd := instr(11,7)
+
+                acquire_reg := instr(11,7)
+
+                valid_instr := true.B
+                instr_for := 0.U
+            }
+            is("b0110011".U) {
+                // add sub slt sltu xor or and sll srl sra
+                io.reg_read1 := instr(19,15)
+                io.reg_read1 := instr(24,20)
+
+                when(instr(14,12)==="b001".U) {
+                    // sll
+                    io.alu_out.bits.alu_opcode := "b00011".U
+                }.elsewhen(instr(14,12)==="b101".U && instr(30)) {
+                    // sra
+                    io.alu_out.bits.alu_opcode := "b01011".U
+                }.elsewhen(instr(14,12)==="b101".U) {
+                    // srl
+                    io.alu_out.bits.alu_opcode := "b01010".U
+                }.elsewhen(instr(14,12)==="b000".U && instr(30)) {
+                    // sub
+                    io.alu_out.bits.alu_opcode := "b00000".U
+                }.otherwise{
+                    io.alu_out.bits.alu_opcode := Cat(1.U(1.W), instr(14,12), 1.U(1.W))
+                }
+                io.alu_out.bits.params.source1 := io.reg_data1
+                io.alu_out.bits.params.source2 := io.reg_data2
+                io.alu_out.bits.params.rd := instr(11,7)
+
+                acquire_reg := instr(11,7)
+
+                valid_instr := true.B
+                instr_for := 0.U
+            }
+            is("b0111011".U) {
+                // addw sllw srlw sraw 
+                io.reg_read1 := instr(19,15)
+                io.reg_read1 := instr(24,20)
+
+                when(instr(14,12)==="b001".U) {
+                    // sll
+                    io.alu_out.bits.alu_opcode := "b10011".U
+                }.elsewhen(instr(14,12)==="b101".U && instr(30)) {
+                    // sra
+                    io.alu_out.bits.alu_opcode := "b11011".U
+                }.elsewhen(instr(14,12)==="b101".U) {
+                    // srl
+                    io.alu_out.bits.alu_opcode := "b11010".U
+                }.elsewhen(instr(14,12)==="b000".U && instr(30)) {
+                    // sub
+                    io.alu_out.bits.alu_opcode := "b10000".U
+                }.otherwise{
+                    io.alu_out.bits.alu_opcode := Cat(1.U(1.W), instr(14,12), 1.U(1.W))
+                }
+                io.alu_out.bits.params.source1 := io.reg_data1
+                io.alu_out.bits.params.source2 := io.reg_data2
                 io.alu_out.bits.params.rd := instr(11,7)
 
                 acquire_reg := instr(11,7)
