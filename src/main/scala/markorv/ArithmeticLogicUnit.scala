@@ -71,13 +71,25 @@ class ArithmeticLogicUnit extends Module {
                 perform_op(io.alu_instr.bits.params.source1 & io.alu_instr.bits.params.source2)
             }
             is(ALU_SLL) {
-                perform_op(io.alu_instr.bits.params.source1 << io.alu_instr.bits.params.source2(4, 0))
+                when(io.alu_instr.bits.alu_opcode(4)) {
+                    perform_op(io.alu_instr.bits.params.source1 << io.alu_instr.bits.params.source2(4, 0))
+                }.otherwise {
+                    perform_op(io.alu_instr.bits.params.source1 << io.alu_instr.bits.params.source2(5, 0))
+                }
             }
             is(ALU_SRL) {
-                perform_op(io.alu_instr.bits.params.source1 >> io.alu_instr.bits.params.source2(4, 0))
+                when(io.alu_instr.bits.alu_opcode(4)) {
+                    perform_op(io.alu_instr.bits.params.source1 >> io.alu_instr.bits.params.source2(4, 0))
+                }.otherwise {
+                    perform_op(io.alu_instr.bits.params.source1 >> io.alu_instr.bits.params.source2(5, 0))
+                }
             }
             is(ALU_SRA) {
-                perform_op((io.alu_instr.bits.params.source1.asSInt >> io.alu_instr.bits.params.source2(4, 0)).asUInt)
+                when(io.alu_instr.bits.alu_opcode(4)) {
+                    perform_op((io.alu_instr.bits.params.source1.asSInt >> io.alu_instr.bits.params.source2(4, 0)).asUInt)
+                }.otherwise {
+                    perform_op(io.alu_instr.bits.params.source1 >> io.alu_instr.bits.params.source2(5, 0))
+                }
             }
         }
     }
