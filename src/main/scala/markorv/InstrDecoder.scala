@@ -142,6 +142,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 // addi slti sltiu xori ori andi slli srli srai
                 io.reg_read1 := instr(19,15)
 
+                occupied_reg := io.occupied_regs(instr(19,15))
+
                 when(instr(14,12)==="b001".U) {
                     // slli
                     io.alu_out.bits.alu_opcode := "b00011".U
@@ -170,6 +172,8 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 // addiw slliw srliw sraiw 
                 io.reg_read1 := instr(19,15)
 
+                occupied_reg := io.occupied_regs(instr(19,15))
+
                 when(instr(14,12)==="b001".U) {
                     // slliw
                     io.alu_out.bits.alu_opcode := "b10011".U
@@ -197,7 +201,9 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
             is("b0110011".U) {
                 // add sub slt sltu xor or and sll srl sra
                 io.reg_read1 := instr(19,15)
-                io.reg_read1 := instr(24,20)
+                io.reg_read2 := instr(24,20)
+
+                occupied_reg := io.occupied_regs(instr(19,15)) | io.occupied_regs(instr(24,20))
 
                 when(instr(14,12)==="b001".U) {
                     // sll
@@ -226,7 +232,9 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
             is("b0111011".U) {
                 // addw sllw srlw sraw 
                 io.reg_read1 := instr(19,15)
-                io.reg_read1 := instr(24,20)
+                io.reg_read2 := instr(24,20)
+
+                occupied_reg := io.occupied_regs(instr(19,15)) | io.occupied_regs(instr(24,20))
 
                 when(instr(14,12)==="b001".U) {
                     // sll
@@ -255,7 +263,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
         }
     }
 
-    when(next_stage_ready) {
+    when(next_stage_ready && (~occupied_reg)) {
         io.acquire_reg := acquire_reg
     }
     when(io.acquired && io.instr_bundle.valid && valid_instr && (~occupied_reg)) {

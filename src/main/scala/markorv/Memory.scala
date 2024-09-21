@@ -24,10 +24,8 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
     // Little endian
     val init_values = Seq(
         "h0ff00093".U(32.W),
-        "h06103c23".U(32.W),
-        "hfff08093".U(32.W),
-        "h06103c23".U(32.W),
-        "hffc08093".U(32.W),
+        "h00400113".U(32.W),
+        "h402080b3".U(32.W),
         "h06103c23".U(32.W),
     )
 
