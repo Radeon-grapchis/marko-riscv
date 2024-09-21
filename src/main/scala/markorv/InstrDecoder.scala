@@ -230,28 +230,28 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 instr_for := 0.U
             }
             is("b0111011".U) {
-                // addw sllw srlw sraw 
+                // addw subw sllw srlw sraw 
                 io.reg_read1 := instr(19,15)
                 io.reg_read2 := instr(24,20)
 
                 occupied_reg := io.occupied_regs(instr(19,15)) | io.occupied_regs(instr(24,20))
 
                 when(instr(14,12)==="b001".U) {
-                    // sll
+                    // sllw
                     io.alu_out.bits.alu_opcode := "b10011".U
                 }.elsewhen(instr(14,12)==="b101".U && instr(30)) {
-                    // sra
+                    // sraw
                     io.alu_out.bits.alu_opcode := "b11011".U
                 }.elsewhen(instr(14,12)==="b101".U) {
-                    // srl
+                    // srlw
                     io.alu_out.bits.alu_opcode := "b11010".U
                 }.elsewhen(instr(14,12)==="b000".U && instr(30)) {
-                    // sub
+                    // subw
                     io.alu_out.bits.alu_opcode := "b10000".U
                 }.otherwise{
                     io.alu_out.bits.alu_opcode := Cat(1.U(1.W), instr(14,12), 1.U(1.W))
                 }
-                io.alu_out.bits.params.source1 := io.reg_data1
+                io.alu_out.bits.params.source1 := io.reg_data1(31,0)
                 io.alu_out.bits.params.source2 := io.reg_data2
                 io.alu_out.bits.params.rd := instr(11,7)
 

@@ -13,7 +13,7 @@ class MarkoRvCore extends Module {
         val peek = Output(UInt(64.W))
     })
 
-    val mem = Module(new Memory(64, 64, 256))
+    val mem = Module(new Memory(64, 64, 1024))
     val instr_fetch_unit = Module(new InstrFetchUnit)
     val instr_decoder = Module(new InstrDecoder)
     val load_store_unit = Module(new LoadStoreUnit)
@@ -34,7 +34,7 @@ class MarkoRvCore extends Module {
     mem.io.port2.addr <> instr_fetch_unit.io.mem_read_addr
     mem.io.port2.data_out <> instr_fetch_unit.io.mem_read_data
     io.instr_now <> instr_fetch_unit.io.instr_bundle.bits.instr
-    io.peek <> mem.io.peek
+    io.peek <> write_back.io.write_data2
 
     instr_decoder.io.reg_read1 <> register_file.io.read_addr1
     instr_decoder.io.reg_read2 <> register_file.io.read_addr2

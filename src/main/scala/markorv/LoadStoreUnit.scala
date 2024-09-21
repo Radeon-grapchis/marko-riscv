@@ -42,7 +42,6 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
         })
 
         val state_peek = Output(UInt(3.W))
-        val debug_peek = Output(UInt(64.W))
     })
 
     // State def
@@ -69,7 +68,6 @@ class LoadStoreUnit(data_width: Int = 64, addr_width: Int = 64) extends Module {
     io.write_back.bits.reg := 0.U(5.W)
 
     io.state_peek := state.asUInt
-    io.debug_peek := params.source2.asUInt
 
     switch(state) {
         is(State.stat_idle) {
