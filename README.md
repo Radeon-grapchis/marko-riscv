@@ -11,8 +11,11 @@
 - [x] ori
 - [x] andi
 - [x] slli
+- [x] slliw
 - [x] srli
+- [x] srliw
 - [x] srai
+- [x] sraiw
 
 #### Register-Register Instructions
 - [ ] add
@@ -117,7 +120,7 @@
 ### TODO List（System）
 - [ ] L1 Instruction cache
 - [ ] L1 Data cache
-- [ ] L2 cache
-- [ ] MMU
+- [ ] TLB
+- [ ] MMU(SV-48)
 - [ ] PCIE(FPGA)(Low Piro)
 - [ ] DDR Memory(FPGA)(Low Piro)
