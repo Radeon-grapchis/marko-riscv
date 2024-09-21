@@ -4,12 +4,12 @@
 - [x] lui
 - [x] auipc
 - [x] addi
-- [ ] addiw
-- [ ] slti
-- [ ] sltiu
-- [ ] xori
-- [ ] ori
-- [ ] andi
+- [x] addiw
+- [x] slti
+- [x] sltiu
+- [x] xori
+- [x] ori
+- [x] andi
 - [ ] slli
 - [ ] slliw
 - [ ] srli

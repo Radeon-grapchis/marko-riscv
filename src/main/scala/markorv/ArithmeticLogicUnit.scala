@@ -18,22 +18,63 @@ class ArithmeticLogicUnit extends Module {
         })
     })
 
+    val write_back_orig = Wire(UInt(64.W))
+
     io.alu_instr.ready := io.write_back.ready
     io.write_back.valid := false.B
     io.write_back.bits.reg := 0.U
     io.write_back.bits.data := 0.U
+    
+    write_back_orig := 0.U
 
-    val ALU_NOP = "b00000".U
-    val ALU_ADD = "b00001".U
-    val ALU_SUB = "b00010".U
+    // ALU operation codes[3,0]
+    val ALU_NOP = "b0000".U
+    val ALU_ADD = "b0001".U
+    val ALU_SLT = "b0101".U
+    val ALU_SLTU = "b0111".U
+    val ALU_XOR = "b1001".U
+    val ALU_OR = "b1101".U
+    val ALU_AND = "b1111".U
 
     when(io.alu_instr.valid) {
-        switch(io.alu_instr.bits.alu_opcode) {
+        switch(io.alu_instr.bits.alu_opcode(3,0)) {
             is(ALU_ADD) {
                 io.write_back.valid := true.B
                 io.write_back.bits.reg := io.alu_instr.bits.params.rd
-                io.write_back.bits.data := io.alu_instr.bits.params.source1 + io.alu_instr.bits.params.source2
+                write_back_orig := io.alu_instr.bits.params.source1 + io.alu_instr.bits.params.source2
+            }
+            is(ALU_SLT) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                write_back_orig := (io.alu_instr.bits.params.source1.asSInt < io.alu_instr.bits.params.source2.asSInt).asUInt
+            }
+            is(ALU_SLTU) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                write_back_orig := (io.alu_instr.bits.params.source1 < io.alu_instr.bits.params.source2).asUInt
+            }
+            is(ALU_XOR) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                write_back_orig := io.alu_instr.bits.params.source1 ^ io.alu_instr.bits.params.source2
+            }
+            is(ALU_OR) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                write_back_orig := io.alu_instr.bits.params.source1 | io.alu_instr.bits.params.source2
+            }
+            is(ALU_AND) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                write_back_orig := io.alu_instr.bits.params.source1 & io.alu_instr.bits.params.source2
             }
         }
+    }
+
+    // Cut and padding to 64Bit for `word` wide command.
+    when(io.alu_instr.bits.alu_opcode(4)) {
+        io.write_back.bits.data := (write_back_orig(31,0).asSInt.pad(64)).asUInt
+    }.otherwise {
+        io.write_back.bits.data := write_back_orig
     }
 }
