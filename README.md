@@ -10,12 +10,9 @@
 - [x] xori
 - [x] ori
 - [x] andi
-- [ ] slli
-- [ ] slliw
-- [ ] srli
-- [ ] srliw
-- [ ] srai
-- [ ] sraiw
+- [x] slli
+- [x] srli
+- [x] srai
 
 #### Register-Register Instructions
 - [ ] add

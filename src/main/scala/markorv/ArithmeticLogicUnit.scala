@@ -30,11 +30,15 @@ class ArithmeticLogicUnit extends Module {
     // ALU operation codes[3,0]
     val ALU_NOP = "b0000".U
     val ALU_ADD = "b0001".U
+    val ALU_SLL = "b0011".U
     val ALU_SLT = "b0101".U
     val ALU_SLTU = "b0111".U
     val ALU_XOR = "b1001".U
+    val ALU_SRL = "b1011".U
     val ALU_OR = "b1101".U
     val ALU_AND = "b1111".U
+
+    val ALU_SRA = "b1010".U
 
     when(io.alu_instr.valid) {
         switch(io.alu_instr.bits.alu_opcode(3,0)) {
@@ -67,6 +71,21 @@ class ArithmeticLogicUnit extends Module {
                 io.write_back.valid := true.B
                 io.write_back.bits.reg := io.alu_instr.bits.params.rd
                 write_back_orig := io.alu_instr.bits.params.source1 & io.alu_instr.bits.params.source2
+            }
+            is(ALU_SLL) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                write_back_orig := io.alu_instr.bits.params.source1 << io.alu_instr.bits.params.source2(5,0)
+            }
+            is(ALU_SRL) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                write_back_orig := io.alu_instr.bits.params.source1 >> io.alu_instr.bits.params.source2(5, 0)
+            }
+            is(ALU_SRA) {
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.alu_instr.bits.params.rd
+                write_back_orig := (io.alu_instr.bits.params.source1.asSInt >> io.alu_instr.bits.params.source2(5, 0)).asUInt
             }
         }
     }
