@@ -4,12 +4,12 @@ import chisel3._
 import chisel3.util._
 
 class MemoryIO(data_width: Int, addr_width: Int) extends Bundle {
-  val addr = Input(UInt(addr_width.W))
-  val data_out = Decoupled(UInt(data_width.W))
-  val write_enable = Input(Bool())
-  val write_data = Input(UInt(data_width.W))
-  val write_width = Input(UInt(2.W))
-  val write_outfire = Output(Bool())
+    val addr = Input(UInt(addr_width.W))
+    val data_out = Decoupled(UInt(data_width.W))
+    val write_enable = Input(Bool())
+    val write_data = Input(UInt(data_width.W))
+    val write_width = Input(UInt(2.W))
+    val write_outfire = Output(Bool())
 }
 
 class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extends Module {
@@ -109,7 +109,7 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
     io.port2.data_out.valid := false.B
     io.port2.write_outfire := false.B
 
-    io.peek := Cat(mem(1016),mem(1017),mem(1018),mem(1019),mem(1020),mem(1021),mem(1022),mem(1023))
+    io.peek := Cat(mem(1023), mem(1022), mem(1021), mem(1020), mem(1019), mem(1018), mem(1017), mem(1016))
 
     when(arbiter.io.chosen === 0.U) {
         when(io.port1.write_enable) {
@@ -119,17 +119,17 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
                 }
                 is(1.U) {
                     for (i <- 0 until 2) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((1 - i) * 8 + 7, (1 - i) * 8)
+                        mem(io.port1.addr + i.U) := io.port1.write_data((i * 8) + 7, i * 8)
                     }
                 }
                 is(2.U) {
                     for (i <- 0 until 4) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((3 - i) * 8 + 7, (3 - i) * 8)
+                        mem(io.port1.addr + i.U) := io.port1.write_data((i * 8) + 7, i * 8)
                     }
                 }
                 is(3.U) {
                     for (i <- 0 until 8) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((7 - i) * 8 + 7, (7 - i) * 8)
+                        mem(io.port1.addr + i.U) := io.port1.write_data((i * 8) + 7, i * 8)
                     }
                 }
             }
@@ -148,17 +148,17 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
                 }
                 is(1.U) {
                     for (i <- 0 until 2) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((1 - i) * 8 + 7, (1 - i) * 8)
+                        mem(io.port2.addr + i.U) := io.port2.write_data((i * 8) + 7, i * 8)
                     }
                 }
                 is(2.U) {
                     for (i <- 0 until 4) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((3 - i) * 8 + 7, (3 - i) * 8)
+                        mem(io.port2.addr + i.U) := io.port2.write_data((i * 8) + 7, i * 8)
                     }
                 }
                 is(3.U) {
                     for (i <- 0 until 8) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((7 - i) * 8 + 7, (7 - i) * 8)
+                        mem(io.port2.addr + i.U) := io.port2.write_data((i * 8) + 7, i * 8)
                     }
                 }
             }
