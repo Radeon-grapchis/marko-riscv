@@ -266,7 +266,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
     when(next_stage_ready && (~occupied_reg)) {
         io.acquire_reg := acquire_reg
     }
-    when(io.acquired && io.instr_bundle.valid && valid_instr && (~occupied_reg)) {
+    when(io.acquired && io.instr_bundle.valid && valid_instr && (~occupied_reg) && next_stage_ready) {
         when(instr_for === 1.U) {
             io.lsu_out.valid := true.B
         }.otherwise {

@@ -7,7 +7,6 @@ import markorv.BranchPredUnit
 
 class FetchQueueEntities extends Bundle {
     val items = Vec(2, new Bundle {
-        val valid = Bool()
         val instr = UInt(32.W)
         val is_branch = Bool()
         val pred_pc = UInt(64.W)
@@ -23,6 +22,8 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
         val fetch_bundle = Decoupled(new FetchQueueEntities)
 
         val next_fetch_pc = Input(UInt(64.W))
+
+        val debug_peek = Output(UInt(64.W))
     })
 
     val bpu0 = Module(new BranchPredUnit)
@@ -30,33 +31,97 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
 
     val instr_queue = Module(new Queue(
         new FetchQueueEntities, 
-        queue_size, 
-        hasFlush=true))
-    val end_pc = RegInit(0.U(64.W))
+        queue_size,
+        flow=true))
+    val end_pc_reg = RegInit(0.U(64.W))
+    val end_pc = Wire(UInt(64.W))
 
     val new_entity = WireInit(0.U.asTypeOf(new FetchQueueEntities))
+    val new_entity_cat_cache = RegInit(0.U.asTypeOf(new FetchQueueEntities))
+    val new_entity_cat_pc = RegInit(0.U(64.W))
+    val new_entity_cat_flag = RegInit(false.B)
 
-    when(instr_queue.io.enq.ready && instr_queue.io.count =/= 0.U) {
-        // get new command if queue isn't full.
+    io.fetch_bundle <> instr_queue.io.deq
+    instr_queue.io.enq.valid := false.B
+    instr_queue.io.enq.bits := 0.U.asTypeOf(new FetchQueueEntities)
 
-    }.elsewhen(instr_queue.io.count === 0.U) {
-        // init fetch queue.
+    bpu0.io.bpu_instr.instr := 0.U
+    bpu0.io.bpu_instr.pc := 0.U
+    bpu1.io.bpu_instr.instr := 0.U
+    bpu1.io.bpu_instr.pc := 0.U
+
+    io.mem_read_data.ready := false.B
+    io.mem_read_addr := 0.U
+
+    io.debug_peek := bpu1.io.bpu_result.pred_pc
+
+    when(instr_queue.io.count === 0.U) {
         end_pc := io.next_fetch_pc
-        io.mem_read_addr := io.next_fetch_pc
-        when(io.mem_read_data.valid) {
-            bpu0.io.bpu_instr.pc := io.next_fetch_pc
-            bpu1.io.bpu_instr.pc := io.next_fetch_pc + 4.U
-            bpu0.io.bpu_instr.instr := io.mem_read_data.bits(63,32)
-            bpu1.io.bpu_instr.instr := io.mem_read_data.bits(31,0)
+    }.otherwise {
+        end_pc := end_pc_reg
+    }
 
-            when(io.bpu0.bpu_result.is_branch) {
-                new_entity.items(0).valid := true.B
-                new_entity.items(0).instr := 
+    when(instr_queue.io.enq.ready) {
+        io.mem_read_data.ready := true.B
+
+        when(new_entity_cat_flag) {
+            io.mem_read_addr := new_entity_cat_pc
+        }.otherwise {
+            io.mem_read_addr := end_pc_reg
+        }
+
+        // get new command if queue isn't full.
+        when(io.mem_read_data.valid && ~new_entity_cat_flag) {
+            bpu0.io.bpu_instr.pc := end_pc_reg
+            bpu1.io.bpu_instr.pc := end_pc_reg + 4.U
+            bpu0.io.bpu_instr.instr := io.mem_read_data.bits(31,0)
+            bpu1.io.bpu_instr.instr := io.mem_read_data.bits(63,32)
+
+            when(bpu0.io.bpu_result.is_branch) {
+                new_entity.items(0).instr := io.mem_read_data.bits(31,0)
                 new_entity.items(0).is_branch := bpu0.io.bpu_result.is_branch
                 new_entity.items(0).pred_pc := bpu0.io.bpu_result.pred_pc
                 new_entity.items(0).recovery_pc := bpu0.io.bpu_result.recovery_pc
-            }.elsewhen {
+
+                // cat next cycle.
+                new_entity_cat_cache := new_entity
+                new_entity_cat_pc := bpu0.io.bpu_result.pred_pc
+                new_entity_cat_flag := true.B
+            }.otherwise {
+                new_entity.items(0).instr := io.mem_read_data.bits(31,0)
+                new_entity.items(0).is_branch := bpu0.io.bpu_result.is_branch
+                new_entity.items(0).pred_pc := bpu0.io.bpu_result.pred_pc
+                new_entity.items(0).recovery_pc := bpu0.io.bpu_result.recovery_pc
+
+                new_entity.items(1).instr := io.mem_read_data.bits(63,32)
+                new_entity.items(1).is_branch := bpu1.io.bpu_result.is_branch
+                new_entity.items(1).pred_pc := bpu1.io.bpu_result.pred_pc
+                new_entity.items(1).recovery_pc := bpu1.io.bpu_result.recovery_pc
+
+                instr_queue.io.enq.valid := true.B
+                instr_queue.io.enq.bits := new_entity
+                end_pc_reg := bpu1.io.bpu_result.pred_pc
             }
+        }
+
+        when(io.mem_read_data.valid && new_entity_cat_flag) {
+            bpu0.io.bpu_instr.pc := new_entity_cat_pc
+            bpu1.io.bpu_instr.pc := new_entity_cat_pc + 4.U
+            bpu0.io.bpu_instr.instr := io.mem_read_data.bits(31,0)
+            bpu1.io.bpu_instr.instr := io.mem_read_data.bits(63,32)
+
+            new_entity.items(0) := new_entity_cat_cache.items(0)
+
+            new_entity.items(1).instr := io.mem_read_data.bits(31,0)
+            new_entity.items(1).is_branch := bpu0.io.bpu_result.is_branch
+            new_entity.items(1).pred_pc := bpu0.io.bpu_result.pred_pc
+            new_entity.items(1).recovery_pc := bpu0.io.bpu_result.recovery_pc
+
+            instr_queue.io.enq.valid := true.B
+            instr_queue.io.enq.bits := new_entity
+            end_pc_reg := bpu0.io.bpu_result.pred_pc
+
+            new_entity_cat_flag := false.B
         }
     }
 }
