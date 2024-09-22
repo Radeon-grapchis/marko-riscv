@@ -1,5 +1,5 @@
-AS = riscv64-linux-gnu-as
-OBJCOPY = riscv64-linux-gnu-objcopy
+AS = riscv64-unknown-elf-as
+OBJCOPY = riscv64-unknown-elf-objcopy
 XXD = xxd
 FOLD = fold
 AWK = awk
