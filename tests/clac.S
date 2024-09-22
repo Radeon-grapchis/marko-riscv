@@ -32,7 +32,7 @@ sraw x28, x1, x3      # x28 = (int32_t)x1 >> (x3 & 0x1F)
 or x29, x1, x3        # x29 = x1 | x3
 and x30, x1, x3       # x30 = x1 & x3
 
-# Final result computation
+# Final result
 sd x30, 1016(x0)
 sd x29, 1016(x0)
 sd x28, 1016(x0)
@@ -63,6 +63,5 @@ sd x4, 1016(x0)
 sd x3, 1016(x0)
 sd x2, 1016(x0)
 sd x1, 1016(x0)
-
 
 sd x1, 1016(x0)

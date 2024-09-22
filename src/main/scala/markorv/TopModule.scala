@@ -21,7 +21,6 @@ class MarkoRvCore extends Module {
     val register_file = Module(new RegFile)
     val write_back = Module(new WriteBack)
 
-    io.pc := instr_fetch_unit.io.instr_bundle.bits.pc
     instr_fetch_unit.io.pc_in := 0.U(64.W)
     instr_fetch_unit.io.set_pc := false.B
 
@@ -31,9 +30,9 @@ class MarkoRvCore extends Module {
 
     load_store_unit.io.mem_write.ready := true.B
 
-    mem.io.port2.addr <> instr_fetch_unit.io.mem_read_addr
-    mem.io.port2.data_out <> instr_fetch_unit.io.mem_read_data
+    io.pc <> instr_fetch_unit.io.instr_bundle.bits.pc
     io.instr_now <> instr_fetch_unit.io.instr_bundle.bits.instr
+
     io.peek <> write_back.io.write_data2
 
     instr_decoder.io.reg_read1 <> register_file.io.read_addr1
