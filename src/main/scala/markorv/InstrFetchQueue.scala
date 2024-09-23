@@ -9,6 +9,7 @@ class FetchQueueEntities extends Bundle {
     val items = Vec(2, new Bundle {
         val instr = UInt(32.W)
         val is_branch = Bool()
+        val pred_taken = Bool()
         val pred_pc = UInt(64.W)
         val recovery_pc = UInt(64.W)
     })
@@ -53,7 +54,7 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
     io.mem_read_data.ready := false.B
     io.mem_read_addr := 0.U
 
-    io.debug_peek := bpu1.io.bpu_result.pred_pc
+    io.debug_peek := instr_queue.io.count
 
     when(instr_queue.io.count === 0.U) {
         end_pc := io.next_fetch_pc
@@ -80,6 +81,7 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
             when(bpu0.io.bpu_result.is_branch) {
                 new_entity.items(0).instr := io.mem_read_data.bits(31,0)
                 new_entity.items(0).is_branch := bpu0.io.bpu_result.is_branch
+                new_entity.items(0).pred_taken := bpu0.io.bpu_result.pred_taken
                 new_entity.items(0).pred_pc := bpu0.io.bpu_result.pred_pc
                 new_entity.items(0).recovery_pc := bpu0.io.bpu_result.recovery_pc
 
@@ -90,11 +92,13 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
             }.otherwise {
                 new_entity.items(0).instr := io.mem_read_data.bits(31,0)
                 new_entity.items(0).is_branch := bpu0.io.bpu_result.is_branch
+                new_entity.items(0).pred_taken := bpu0.io.bpu_result.pred_taken
                 new_entity.items(0).pred_pc := bpu0.io.bpu_result.pred_pc
                 new_entity.items(0).recovery_pc := bpu0.io.bpu_result.recovery_pc
 
                 new_entity.items(1).instr := io.mem_read_data.bits(63,32)
                 new_entity.items(1).is_branch := bpu1.io.bpu_result.is_branch
+                new_entity.items(1).pred_taken := bpu1.io.bpu_result.pred_taken
                 new_entity.items(1).pred_pc := bpu1.io.bpu_result.pred_pc
                 new_entity.items(1).recovery_pc := bpu1.io.bpu_result.recovery_pc
 
@@ -114,6 +118,7 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
 
             new_entity.items(1).instr := io.mem_read_data.bits(31,0)
             new_entity.items(1).is_branch := bpu0.io.bpu_result.is_branch
+            new_entity.items(1).pred_taken := bpu0.io.bpu_result.pred_taken
             new_entity.items(1).pred_pc := bpu0.io.bpu_result.pred_pc
             new_entity.items(1).recovery_pc := bpu0.io.bpu_result.recovery_pc
 

@@ -48,7 +48,7 @@
 - [x] sd
 
 #### Control Instructions
-- [ ] jal
+- [x] jal
 - [ ] jalr
 - [ ] beq
 - [ ] bne

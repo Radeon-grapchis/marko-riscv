@@ -17,8 +17,11 @@ class MarkoRvCore extends Module {
     val instr_fetch_queue = Module(new InstrFetchQueue)
     val instr_fetch_unit = Module(new InstrFetchUnit)
     val instr_decoder = Module(new InstrDecoder)
+
     val load_store_unit = Module(new LoadStoreUnit)
     val arithmetic_logic_unit = Module(new ArithmeticLogicUnit)
+    val branch_unit = Module(new BranchUnit)
+
     val register_file = Module(new RegFile)
     val write_back = Module(new WriteBack)
 
@@ -61,12 +64,18 @@ class MarkoRvCore extends Module {
     write_back.io.write_data1 <> register_file.io.write_data1
     write_back.io.reg_write2 <> register_file.io.write_addr2
     write_back.io.write_data2 <> register_file.io.write_data2
+    write_back.io.reg_write3 <> register_file.io.write_addr3
+    write_back.io.write_data3 <> register_file.io.write_data3
 
     PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, instr_decoder.io.outfire, false.B)
-    PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, load_store_unit.io.state_peek === 0.U , false.B)
+
     PipelineConnect(instr_decoder.io.alu_out, arithmetic_logic_unit.io.alu_instr, true.B , false.B)
+    PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, load_store_unit.io.state_peek === 0.U , false.B)
+    PipelineConnect(instr_decoder.io.branch_out, branch_unit.io.branch_instr, true.B , false.B)
+
     PipelineConnect(load_store_unit.io.write_back, write_back.io.write_back1, write_back.io.outfire1, false.B)
     PipelineConnect(arithmetic_logic_unit.io.write_back, write_back.io.write_back2, write_back.io.outfire2, false.B)
+    PipelineConnect(branch_unit.io.write_back, write_back.io.write_back3, write_back.io.outfire3, false.B)
 }
 
 object MarkoRvCore extends App {

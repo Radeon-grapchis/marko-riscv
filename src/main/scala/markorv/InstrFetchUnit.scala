@@ -7,6 +7,7 @@ import markorv.FetchQueueEntities
 
 class InstrIPBundle extends Bundle {
     val instr = Output(UInt(32.W))
+    val pred_taken = Output(Bool())
     val pc = Output(UInt(64.W))
     val recovery_pc = Output(UInt(64.W))
 }
@@ -32,8 +33,10 @@ class InstrFetchUnit extends Module {
 
     val prefetch_flag = RegInit(false.B)
 
+    // init default values
     io.instr_bundle.valid := false.B
     io.instr_bundle.bits.instr := 0.U(32.W)
+    io.instr_bundle.bits.pred_taken := false.B
     io.instr_bundle.bits.pc := pc
     io.instr_bundle.bits.recovery_pc := pc
 
@@ -52,6 +55,7 @@ class InstrFetchUnit extends Module {
     }.otherwise {
         io.instr_bundle.valid := true.B
         io.instr_bundle.bits.instr := instr_buffer(instr_buffer_now).items(buffer_at).instr
+        io.instr_bundle.bits.pred_taken := instr_buffer(instr_buffer_now).items(buffer_at).pred_taken
         io.instr_bundle.bits.recovery_pc := instr_buffer(instr_buffer_now).items(buffer_at).recovery_pc
         when(io.instr_bundle.ready && !prefetch_flag) {
             buffer_valid := (buffer_at =/= 1.U)

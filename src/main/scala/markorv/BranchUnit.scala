@@ -1,0 +1,42 @@
+package markorv
+
+import chisel3._
+import chisel3.util._
+
+class BranchUnit extends Module {
+    val io = IO(new Bundle {
+        val branch_instr = Flipped(Decoupled(new Bundle {
+            val branch_opcode = UInt(5.W)
+            val recovery_pc = UInt(64.W)
+            val pred_taken = Bool()
+            val params = new DecoderOutParams
+        }))
+
+        val write_back = Decoupled(new Bundle {
+            val reg = Input(UInt(5.W))
+            val data = Input(UInt(64.W))
+        })
+
+        val flush = Output(Bool())
+        val rev_pc = Output(UInt(64.W))
+    })
+
+    io.branch_instr.ready := true.B
+    io.flush := false.B
+    io.rev_pc := 0.U
+
+    io.write_back.valid := false.B
+    io.write_back.bits.reg := 0.U
+    io.write_back.bits.data := 0.U
+
+    when(io.branch_instr.valid) {
+        switch(io.branch_instr.bits.branch_opcode) {
+            is("b00001".U) {
+                // Set rd here.
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.branch_instr.bits.params.rd
+                io.write_back.bits.data := io.branch_instr.bits.params.pc + 4.U
+            }
+        }
+    }
+}

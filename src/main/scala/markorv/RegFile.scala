@@ -16,6 +16,9 @@ class RegFile(data_width: Int = 64) extends Module {
         val write_addr2 = Input(UInt(5.W))
         val write_data2 = Input(UInt(data_width.W))
 
+        val write_addr3 = Input(UInt(5.W))
+        val write_data3 = Input(UInt(data_width.W))
+
         val acquire_reg = Input(UInt(5.W))
         val acquired = Output(Bool())
 
@@ -24,6 +27,7 @@ class RegFile(data_width: Int = 64) extends Module {
     val reg_acquire_flags = RegInit(0.U(32.W))
     val reg_acquire_flags_next1 = Wire(UInt(32.W))
     val reg_acquire_flags_next2 = Wire(UInt(32.W))
+    val reg_acquire_flags_next3 = Wire(UInt(32.W))
 
     val regs = RegInit(VecInit(Seq.fill(32)(0.U(data_width.W))))
 
@@ -46,14 +50,21 @@ class RegFile(data_width: Int = 64) extends Module {
     }.otherwise {
         reg_acquire_flags_next2 := reg_acquire_flags_next1
     }
+    
+    when(io.write_addr3 =/= 0.U) {
+        regs(io.write_addr3) := io.write_data3
+        reg_acquire_flags_next3 := reg_acquire_flags_next2 & ~(1.U << io.write_addr3)
+    }.otherwise {
+        reg_acquire_flags_next3 := reg_acquire_flags_next2
+    }
 
     when(io.acquire_reg =/= 0.U && ~reg_acquire_flags(io.acquire_reg)) {
-        reg_acquire_flags := reg_acquire_flags_next2 | (1.U << io.acquire_reg)
+        reg_acquire_flags := reg_acquire_flags_next3 | (1.U << io.acquire_reg)
         io.acquired := true.B
     }.elsewhen(io.acquire_reg === 0.U) {
-        reg_acquire_flags := reg_acquire_flags_next2
+        reg_acquire_flags := reg_acquire_flags_next3
         io.acquired := true.B
     }.otherwise {
-        reg_acquire_flags := reg_acquire_flags_next2
+        reg_acquire_flags := reg_acquire_flags_next3
     }
 }
