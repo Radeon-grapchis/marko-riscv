@@ -31,8 +31,7 @@ class MarkoRvCore extends Module {
 
     instr_fetch_queue.io.mem_read_addr <> mem.io.port2.addr
     instr_fetch_queue.io.mem_read_data <> mem.io.port2.data_out
-    // TODO using next pc.
-    instr_fetch_queue.io.next_fetch_pc <> instr_fetch_unit.io.peek_pc
+    instr_fetch_queue.io.next_fetch_pc <> instr_fetch_unit.io.next_fetch_pc
 
     mem.io.port2.write_enable := false.B
     mem.io.port2.write_data := 0.U(64.W)

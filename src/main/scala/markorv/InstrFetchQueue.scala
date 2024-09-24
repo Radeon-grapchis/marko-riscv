@@ -68,13 +68,13 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
         when(new_entity_cat_flag) {
             io.mem_read_addr := new_entity_cat_pc
         }.otherwise {
-            io.mem_read_addr := end_pc_reg
+            io.mem_read_addr := end_pc
         }
 
         // get new command if queue isn't full.
         when(io.mem_read_data.valid && ~new_entity_cat_flag) {
-            bpu0.io.bpu_instr.pc := end_pc_reg
-            bpu1.io.bpu_instr.pc := end_pc_reg + 4.U
+            bpu0.io.bpu_instr.pc := end_pc
+            bpu1.io.bpu_instr.pc := end_pc + 4.U
             bpu0.io.bpu_instr.instr := io.mem_read_data.bits(31,0)
             bpu1.io.bpu_instr.instr := io.mem_read_data.bits(63,32)
 

@@ -17,6 +17,7 @@ class InstrFetchUnit extends Module {
         val fetch_bundle = Flipped(Decoupled(new FetchQueueEntities))
 
         val instr_bundle = Decoupled(new InstrIPBundle)
+        val next_fetch_pc = Output(UInt(64.W))
 
         val peek_pc = Output(UInt(64.W))
         val pc_in = Input(UInt(64.W))
@@ -42,6 +43,8 @@ class InstrFetchUnit extends Module {
 
     io.fetch_bundle.ready := false.B
     io.peek_pc := pc
+
+    io.next_fetch_pc := instr_buffer(instr_buffer_now).items(1).pred_pc
 
     when(!buffer_valid && !prefetch_flag) {
         // get new item
