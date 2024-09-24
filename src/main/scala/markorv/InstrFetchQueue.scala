@@ -54,7 +54,7 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
     io.mem_read_data.ready := false.B
     io.mem_read_addr := 0.U
 
-    io.debug_peek := instr_queue.io.count
+    io.debug_peek := new_entity_cat_flag
 
     when(instr_queue.io.count === 0.U) {
         end_pc := io.next_fetch_pc
