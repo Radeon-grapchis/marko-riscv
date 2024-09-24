@@ -19,21 +19,24 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
         val peek = Output(UInt(data_width.W))
     })
 
-    val mem = Mem(size, UInt(8.W))
+    // Use SyncReadMem instead of Mem
+    val mem = SyncReadMem(size, UInt(8.W))
 
-    // Little endian
+    // Initialize the memory with initial values
     val init_values = Seq(
-"h3e200c23".U(32.W),
-"h00110113".U(32.W),
-"hff9ff0ef".U(32.W),
+        "h3e200c23".U(32.W),
+        "h00110113".U(32.W),
+        "hff9ff0ef".U(32.W)
     )
 
+    // Little endian initialization
     for (i <- 0 until init_values.length) {
         for (j <- 0 until 4) {
-            mem(i * 4 + j) := (init_values(i) >> (j * 8))(7, 0)
+        mem.write((i * 4 + j).U, (init_values(i) >> (j * 8))(7, 0))
         }
     }
 
+    // Arbiter to manage access between two ports
     val arbiter = Module(new Arbiter(Bool(), 2))
     arbiter.io.in(0).valid := io.port1.write_enable || io.port1.data_out.ready
     arbiter.io.in(1).valid := io.port2.write_enable || io.port2.data_out.ready
@@ -51,63 +54,92 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
     io.port2.data_out.valid := false.B
     io.port2.write_outfire := false.B
 
-    io.peek := Cat(mem(1023), mem(1022), mem(1021), mem(1020), mem(1019), mem(1018), mem(1017), mem(1016))
+    val port1_last_read_addr = RegInit(0.U(data_width.W))
+    val port2_last_read_addr = RegInit(0.U(data_width.W))
+    val port1_available = RegInit(false.B)
+    val port2_available = RegInit(false.B)
 
+    // Peek operation to view specific memory content
+    io.peek := Cat(mem.read(1023.U), mem.read(1022.U), mem.read(1021.U), mem.read(1020.U), 
+                    mem.read(1019.U), mem.read(1018.U), mem.read(1017.U), mem.read(1016.U))
+
+    // Port 1 operations
     when(arbiter.io.chosen === 0.U) {
         when(io.port1.write_enable) {
             switch(io.port1.write_width) {
                 is(0.U) {
-                    mem(io.port1.addr) := io.port1.write_data(7, 0)
+                    mem.write(io.port1.addr, io.port1.write_data(7, 0))
                 }
                 is(1.U) {
                     for (i <- 0 until 2) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((i * 8) + 7, i * 8)
+                        mem.write(io.port1.addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
                     }
                 }
                 is(2.U) {
                     for (i <- 0 until 4) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((i * 8) + 7, i * 8)
+                        mem.write(io.port1.addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
                     }
                 }
                 is(3.U) {
                     for (i <- 0 until 8) {
-                        mem(io.port1.addr + i.U) := io.port1.write_data((i * 8) + 7, i * 8)
+                        mem.write(io.port1.addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
                     }
                 }
             }
             io.port1.write_outfire := true.B
+        }.elsewhen(io.port1.data_out.ready && port1_available) {
+            // Read from SyncReadMem, data available in the next cycle
+            val read_data = Wire(Vec(data_width / 8, UInt(8.W)))
+            for (i <- 0 until data_width / 8) {
+                read_data(i) := mem.read(io.port1.addr + i.U)
+            }
+            io.port1.data_out.bits := Cat(read_data.reverse)
+            port1_last_read_addr := io.port1.addr
+            when(port1_last_read_addr === io.port1.addr) {
+                io.port1.data_out.valid := true.B
+            }
         }.elsewhen(io.port1.data_out.ready) {
-            io.port1.data_out.bits := Cat((0 until data_width / 8).reverse.map(i => mem(io.port1.addr + i.U)))
-            io.port1.data_out.valid := true.B
+            port1_available := true.B
         }
     }
 
+    // Port 2 operations
     when(arbiter.io.chosen === 1.U) {
         when(io.port2.write_enable) {
             switch(io.port2.write_width) {
                 is(0.U) {
-                    mem(io.port2.addr) := io.port2.write_data(7, 0)
+                    mem.write(io.port2.addr, io.port2.write_data(7, 0))
                 }
                 is(1.U) {
                     for (i <- 0 until 2) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((i * 8) + 7, i * 8)
+                        mem.write(io.port2.addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
                     }
                 }
                 is(2.U) {
                     for (i <- 0 until 4) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((i * 8) + 7, i * 8)
+                        mem.write(io.port2.addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
                     }
                 }
                 is(3.U) {
                     for (i <- 0 until 8) {
-                        mem(io.port2.addr + i.U) := io.port2.write_data((i * 8) + 7, i * 8)
+                        mem.write(io.port2.addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
                     }
                 }
             }
             io.port2.write_outfire := true.B
+        }.elsewhen(io.port2.data_out.ready && port2_available) {
+            // Read from SyncReadMem, data available in the next cycle
+            val read_data = Wire(Vec(data_width / 8, UInt(8.W)))
+            for (i <- 0 until data_width / 8) {
+                read_data(i) := mem.read(io.port2.addr + i.U)
+            }
+            io.port2.data_out.bits := Cat(read_data.reverse)
+            port2_last_read_addr := io.port2.addr
+            when (port2_last_read_addr === io.port2.addr) {
+                io.port2.data_out.valid := true.B
+            }
         }.elsewhen(io.port2.data_out.ready) {
-            io.port2.data_out.bits := Cat((0 until data_width / 8).reverse.map(i => mem(io.port2.addr + i.U)))
-            io.port2.data_out.valid := true.B
+            port2_available := true.B
         }
     }
 }
