@@ -118,7 +118,7 @@
 - [ ] remuw
 
 ### TODO List（System）
-- [ ] L1 Instruction cache
+- [x] L1 Instruction cache
 - [ ] L1 Data cache
 - [ ] TLB
 - [ ] MMU(SV-48)

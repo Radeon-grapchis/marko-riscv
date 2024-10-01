@@ -33,7 +33,7 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
     // Little endian initialization
     for (i <- 0 until init_values.length) {
         for (j <- 0 until 4) {
-        mem.write((i * 4 + j).U, (init_values(i) >> (j * 8))(7, 0))
+            mem.write((i * 4 + j).U, (init_values(i) >> (j * 8))(7, 0))
         }
     }
 

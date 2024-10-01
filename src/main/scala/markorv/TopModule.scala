@@ -6,6 +6,7 @@ import _root_.circt.stage.ChiselStage
 
 import markorv._
 import markorv.memory._
+import markorv.cache.Cache
 
 class MarkoRvCore extends Module {
     val io = IO(new Bundle {
@@ -15,6 +16,8 @@ class MarkoRvCore extends Module {
     })
 
     val mem = Module(new Memory(64, 64, 1024))
+    val instr_cache = Module(new Cache(8, 4, 16, 64))
+
     val instr_fetch_queue = Module(new InstrFetchQueue)
     val instr_fetch_unit = Module(new InstrFetchUnit)
     val instr_decoder = Module(new InstrDecoder)
@@ -30,8 +33,11 @@ class MarkoRvCore extends Module {
     instr_fetch_unit.io.set_pc := false.B
     instr_fetch_unit.io.fetch_bundle <> instr_fetch_queue.io.fetch_bundle
 
-    instr_fetch_queue.io.mem_read_addr <> mem.io.port2.read_addr
-    instr_fetch_queue.io.mem_read_data <> mem.io.port2.data_out
+    instr_cache.io.mem_read_addr <> mem.io.port2.read_addr
+    instr_cache.io.mem_read_data <> mem.io.port2.data_out
+
+    instr_fetch_queue.io.read_addr <> instr_cache.io.read_addr
+    instr_fetch_queue.io.read_cache_line <> instr_cache.io.read_cache_line
     instr_fetch_queue.io.pc <> instr_fetch_unit.io.peek_pc
 
     mem.io.port2.write_addr := 0.U(64.W)
