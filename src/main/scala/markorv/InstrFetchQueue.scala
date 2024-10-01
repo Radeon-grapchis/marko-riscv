@@ -16,7 +16,7 @@ class FetchQueueEntities extends Bundle {
 class InstrFetchQueue(queue_size: Int = 16) extends Module {
     val io = IO(new Bundle {
         val mem_read_data = Flipped(Decoupled(UInt(64.W)))
-        val mem_read_addr = Output(UInt(64.W))
+        val mem_read_addr = Decoupled(UInt(64.W))
 
         val fetch_bundle = Decoupled(new FetchQueueEntities)
 
@@ -41,7 +41,8 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
     bpu.io.bpu_instr.pc := 0.U
 
     io.mem_read_data.ready := false.B
-    io.mem_read_addr := 0.U
+    io.mem_read_addr.valid := false.B
+    io.mem_read_addr.bits := 0.U
 
     when(instr_queue.io.count === 0.U) {
         end_pc := io.pc
@@ -51,7 +52,8 @@ class InstrFetchQueue(queue_size: Int = 16) extends Module {
 
     when(instr_queue.io.enq.ready) {
         io.mem_read_data.ready := true.B
-        io.mem_read_addr := end_pc
+        io.mem_read_addr.valid := true.B
+        io.mem_read_addr.bits := end_pc
 
         when(io.mem_read_data.valid) {
             bpu.io.bpu_instr.pc := end_pc

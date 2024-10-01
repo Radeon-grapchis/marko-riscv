@@ -4,8 +4,9 @@ import chisel3._
 import chisel3.util._
 
 class MemoryIO(data_width: Int, addr_width: Int) extends Bundle {
-    val addr = Input(UInt(addr_width.W))
+    val read_addr = Flipped(Decoupled(UInt(addr_width.W)))
     val data_out = Decoupled(UInt(data_width.W))
+    val write_addr = Input(UInt(addr_width.W))
     val write_enable = Input(Bool())
     val write_data = Input(UInt(data_width.W))
     val write_width = Input(UInt(2.W))
@@ -47,13 +48,6 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
     arbiterOut := arbiter.io.out.ready
     arbiter.io.out.ready := true.B
 
-    io.port1.data_out.bits := 0.U
-    io.port1.data_out.valid := false.B
-    io.port1.write_outfire := false.B
-    io.port2.data_out.bits := 0.U
-    io.port2.data_out.valid := false.B
-    io.port2.write_outfire := false.B
-
     val port1_last_read_addr = RegInit(0.U(data_width.W))
     val port2_last_read_addr = RegInit(0.U(data_width.W))
     val port1_last_read_data = RegInit(0.U(data_width.W))
@@ -61,6 +55,15 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
     val port1_read_available = RegInit(false.B)
     val port2_read_available = RegInit(false.B)
     val mem_available = RegInit(false.B)
+
+    io.port1.read_addr.ready := mem_available
+    io.port1.data_out.bits := 0.U
+    io.port1.data_out.valid := false.B
+    io.port1.write_outfire := false.B
+    io.port2.read_addr.ready := mem_available
+    io.port2.data_out.bits := 0.U
+    io.port2.data_out.valid := false.B
+    io.port2.write_outfire := false.B
 
     // Peek operation to view specific memory content
     io.peek := Cat(mem.read(1023.U), mem.read(1022.U), mem.read(1021.U), mem.read(1020.U), 
@@ -71,21 +74,21 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
         when(io.port1.write_enable) {
             switch(io.port1.write_width) {
                 is(0.U) {
-                    mem.write(io.port1.addr, io.port1.write_data(7, 0))
+                    mem.write(io.port1.write_addr, io.port1.write_data(7, 0))
                 }
                 is(1.U) {
                     for (i <- 0 until 2) {
-                        mem.write(io.port1.addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
+                        mem.write(io.port1.write_addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
                     }
                 }
                 is(2.U) {
                     for (i <- 0 until 4) {
-                        mem.write(io.port1.addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
+                        mem.write(io.port1.write_addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
                     }
                 }
                 is(3.U) {
                     for (i <- 0 until 8) {
-                        mem.write(io.port1.addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
+                        mem.write(io.port1.write_addr + i.U, io.port1.write_data((i * 8) + 7, i * 8))
                     }
                 }
             }
@@ -95,14 +98,14 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
             // Read from SyncReadMem, data available in the next cycle
             val read_data = Wire(Vec(data_width / 8, UInt(8.W)))
             for (i <- 0 until data_width / 8) {
-                read_data(i) := mem.read(io.port1.addr + i.U)
+                read_data(i) := mem.read(io.port1.read_addr.bits + i.U)
             }
             io.port1.data_out.bits := Cat(read_data.reverse)
-            port1_last_read_addr := io.port1.addr
+            port1_last_read_addr := io.port1.read_addr.bits
             port2_read_available := false.B
-            when(port1_last_read_addr === io.port1.addr && port1_read_available) {
+            when(port1_last_read_addr === io.port1.read_addr.bits && port1_read_available) {
                 io.port1.data_out.valid := true.B
-            }.elsewhen(port1_last_read_addr === io.port1.addr) {
+            }.elsewhen(port1_last_read_addr === io.port1.read_addr.bits) {
                 port1_read_available := true.B
             }
         }.elsewhen(io.port1.data_out.ready) {
@@ -115,21 +118,21 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
         when(io.port2.write_enable) {
             switch(io.port2.write_width) {
                 is(0.U) {
-                    mem.write(io.port2.addr, io.port2.write_data(7, 0))
+                    mem.write(io.port2.write_addr, io.port2.write_data(7, 0))
                 }
                 is(1.U) {
                     for (i <- 0 until 2) {
-                        mem.write(io.port2.addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
+                        mem.write(io.port2.write_addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
                     }
                 }
                 is(2.U) {
                     for (i <- 0 until 4) {
-                        mem.write(io.port2.addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
+                        mem.write(io.port2.write_addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
                     }
                 }
                 is(3.U) {
                     for (i <- 0 until 8) {
-                        mem.write(io.port2.addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
+                        mem.write(io.port2.write_addr + i.U, io.port2.write_data((i * 8) + 7, i * 8))
                     }
                 }
             }
@@ -139,14 +142,14 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
             // Read from SyncReadMem, data available in the next cycle
             val read_data = Wire(Vec(data_width / 8, UInt(8.W)))
             for (i <- 0 until data_width / 8) {
-                read_data(i) := mem.read(io.port2.addr + i.U)
+                read_data(i) := mem.read(io.port2.read_addr.bits + i.U)
             }
             io.port2.data_out.bits := Cat(read_data.reverse)
-            port2_last_read_addr := io.port2.addr
+            port2_last_read_addr := io.port2.read_addr.bits
             port1_read_available := false.B
-            when (port2_last_read_addr === io.port2.addr && port2_read_available) {
+            when (port2_last_read_addr === io.port2.read_addr.bits && port2_read_available) {
                 io.port2.data_out.valid := true.B
-            }.elsewhen(port2_last_read_addr === io.port2.addr) {
+            }.elsewhen(port2_last_read_addr === io.port2.read_addr.bits) {
                 port2_read_available := true.B
             }
         }.elsewhen(io.port2.data_out.ready) {

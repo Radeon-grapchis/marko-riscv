@@ -30,10 +30,11 @@ class MarkoRvCore extends Module {
     instr_fetch_unit.io.set_pc := false.B
     instr_fetch_unit.io.fetch_bundle <> instr_fetch_queue.io.fetch_bundle
 
-    instr_fetch_queue.io.mem_read_addr <> mem.io.port2.addr
+    instr_fetch_queue.io.mem_read_addr <> mem.io.port2.read_addr
     instr_fetch_queue.io.mem_read_data <> mem.io.port2.data_out
     instr_fetch_queue.io.pc <> instr_fetch_unit.io.peek_pc
 
+    mem.io.port2.write_addr := 0.U(64.W)
     mem.io.port2.write_enable := false.B
     mem.io.port2.write_data := 0.U(64.W)
     mem.io.port2.write_width := 0.U(2.W)
@@ -56,7 +57,8 @@ class MarkoRvCore extends Module {
     mem.io.port1.write_data <> load_store_unit.io.mem_write.bits
     mem.io.port1.write_enable <> load_store_unit.io.mem_write.valid
     mem.io.port1.data_out <> load_store_unit.io.mem_read
-    mem.io.port1.addr <> load_store_unit.io.mem_addr
+    mem.io.port1.read_addr <> load_store_unit.io.mem_read_addr
+    mem.io.port1.write_addr <> load_store_unit.io.mem_write_addr
     mem.io.port1.write_outfire <> load_store_unit.io.mem_write_outfire
     mem.io.port1.write_width <> load_store_unit.io.mem_write_width
 
