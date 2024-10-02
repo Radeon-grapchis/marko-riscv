@@ -87,7 +87,7 @@ class BranchUnit extends Module {
                     io.rev_pc := io.branch_instr.bits.recovery_pc
                 }
             }
-            is("b01100".U) {
+            is("b01110".U) {
                 // bgeu
                 when(io.branch_instr.bits.params.source1 >= io.branch_instr.bits.params.source2) {
                     io.flush := ~io.branch_instr.bits.pred_taken

@@ -30,8 +30,9 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
 
         val branch_out = Decoupled(new Bundle {
             val branch_opcode = UInt(5.W)
-            val recovery_pc = UInt(64.W)
             val pred_taken = Bool()
+            val pred_pc = UInt(64.W)
+            val recovery_pc = UInt(64.W)
             val params = new DecoderOutParams(data_width)
         })
 
@@ -91,8 +92,9 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
 
     io.branch_out.valid := false.B
     io.branch_out.bits.branch_opcode := 0.U
-    io.branch_out.bits.recovery_pc := 0.U
     io.branch_out.bits.pred_taken := false.B
+    io.branch_out.bits.pred_pc := 0.U
+    io.branch_out.bits.recovery_pc := 0.U
     io.branch_out.bits.params.immediate := 0.U(data_width.W)
     io.branch_out.bits.params.source1 := 0.U(data_width.W)
     io.branch_out.bits.params.source2 := 0.U(data_width.W)
@@ -309,6 +311,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 
                 io.branch_out.bits.params.source1 := io.reg_data1
                 io.branch_out.bits.params.source2 := io.reg_data2
+                io.branch_out.bits.pred_pc := io.instr_bundle.bits.pred_pc
 
                 valid_instr := true.B
                 instr_for := 2.U

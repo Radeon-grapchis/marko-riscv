@@ -8,6 +8,7 @@ import markorv.FetchQueueEntities
 class InstrIPBundle extends Bundle {
     val instr = Output(UInt(32.W))
     val pred_taken = Output(Bool())
+    val pred_pc = Output(UInt(64.W))
     val recovery_pc = Output(UInt(64.W))
     val pc = Output(UInt(64.W))
 }
@@ -29,8 +30,9 @@ class InstrFetchUnit extends Module {
     io.instr_bundle.valid := false.B
     io.instr_bundle.bits.instr := 0.U(32.W)
     io.instr_bundle.bits.pred_taken := false.B
-    io.instr_bundle.bits.pc := pc
     io.instr_bundle.bits.recovery_pc := pc
+    io.instr_bundle.bits.pred_pc := pc
+    io.instr_bundle.bits.pc := pc
 
     io.fetch_bundle.ready := io.instr_bundle.ready
     io.peek_pc := pc
@@ -39,6 +41,7 @@ class InstrFetchUnit extends Module {
         io.instr_bundle.valid := true.B
         io.instr_bundle.bits.instr := io.fetch_bundle.bits.instr
         io.instr_bundle.bits.pred_taken := io.fetch_bundle.bits.pred_taken
+        io.instr_bundle.bits.pred_pc := io.fetch_bundle.bits.pred_pc
         io.instr_bundle.bits.recovery_pc := io.fetch_bundle.bits.recovery_pc
         io.instr_bundle.bits.pc := pc
 
