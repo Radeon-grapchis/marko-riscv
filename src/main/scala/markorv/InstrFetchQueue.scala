@@ -21,6 +21,8 @@ class InstrFetchQueue(queue_size: Int = 16, n_set: Int = 8, n_way: Int = 4, n_by
 
         val fetch_bundle = Decoupled(new FetchQueueEntities)
         val pc = Input(UInt(64.W))
+
+        val flush = Input(Bool())
     })
 
     val bpu = Module(new BranchPredUnit)
@@ -28,7 +30,8 @@ class InstrFetchQueue(queue_size: Int = 16, n_set: Int = 8, n_way: Int = 4, n_by
     val instr_queue = Module(new Queue(
         new FetchQueueEntities, 
         queue_size,
-        flow=true))
+        flow=true,
+        hasFlush=true))
     val end_pc_reg = RegInit(0.U(64.W))
     val end_pc = Wire(UInt(64.W))
 
@@ -54,7 +57,9 @@ class InstrFetchQueue(queue_size: Int = 16, n_set: Int = 8, n_way: Int = 4, n_by
         end_pc := end_pc_reg
     }
 
-    when(instr_queue.io.enq.ready && end_pc(63, log2Ceil(n_byte)) === cache_line_addr(63, log2Ceil(n_byte)) && cache_line_valid) {
+    instr_queue.io.flush.getOrElse(false.B) := io.flush
+
+    when(instr_queue.io.enq.ready && end_pc(63, log2Ceil(n_byte)) === cache_line_addr(63, log2Ceil(n_byte)) && cache_line_valid && !io.flush) {
         // Read from fetched cache line
         val splited_data = Wire(Vec((8*n_byte)/32, UInt(32.W)))
         for(i <- 0 until (8*n_byte)/32) {
@@ -72,7 +77,7 @@ class InstrFetchQueue(queue_size: Int = 16, n_set: Int = 8, n_way: Int = 4, n_by
         instr_queue.io.enq.valid := true.B
 
         end_pc_reg := bpu.io.bpu_result.pred_pc
-    }.elsewhen(instr_queue.io.enq.ready) {
+    }.elsewhen(instr_queue.io.enq.ready && !io.flush) {
         // Read from upstream cache
         io.read_cache_line.ready := true.B
         io.read_addr.valid := true.B

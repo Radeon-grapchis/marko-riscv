@@ -293,6 +293,26 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 valid_instr := true.B
                 instr_for := 2.U
             }
+            is("b1100111".U) {
+                // jalr
+                // TODO
+            }
+            is("b1100011".U) {
+                // branch
+                io.reg_read1 := instr(19,15)
+                io.reg_read2 := instr(24,20)
+                occupied_reg := io.occupied_regs(instr(19,15)) | io.occupied_regs(instr(24,20))
+
+                io.branch_out.bits.branch_opcode := Cat(0.U,instr(14,12),0.U)
+                io.branch_out.bits.pred_taken := io.instr_bundle.bits.pred_taken
+                io.branch_out.bits.recovery_pc := io.instr_bundle.bits.recovery_pc
+                
+                io.branch_out.bits.params.source1 := io.reg_data1
+                io.branch_out.bits.params.source2 := io.reg_data2
+
+                valid_instr := true.B
+                instr_for := 2.U
+            }
         }
     }
 

@@ -50,8 +50,8 @@
 #### Control Instructions
 - [x] jal
 - [ ] jalr
-- [ ] beq
-- [ ] bne
+- [x] beq
+- [x] bne
 - [ ] blt
 - [ ] bge
 - [ ] bltu

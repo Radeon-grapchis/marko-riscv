@@ -20,9 +20,6 @@ class Cache(n_set: Int = 8, n_way: Int = 4, n_byte: Int = 16, upstream_bandwidth
 
         val read_addr = Flipped(Decoupled((UInt(64.W))))
         val read_cache_line = Decoupled(new CacheLine(n_set, n_way, n_byte))
-
-        val pk_tmp = Output(new CacheLine(n_set, n_way, n_byte))
-        val pk_sk = Output(UInt(64.W))
     })
 
     val offset_width = log2Ceil(n_byte)
@@ -44,9 +41,6 @@ class Cache(n_set: Int = 8, n_way: Int = 4, n_byte: Int = 16, upstream_bandwidth
         val stat_idle, stat_look_up, stat_read_upstream, stat_write_upstream, stat_replace = Value
     }
     val state = RegInit(State.stat_idle)
-
-    io.pk_tmp := temp_cache_line
-    io.pk_sk := state.asUInt
 
     io.read_cache_line.valid := false.B
     io.read_cache_line.bits := 0.U.asTypeOf(new CacheLine(n_set, n_way, n_byte))

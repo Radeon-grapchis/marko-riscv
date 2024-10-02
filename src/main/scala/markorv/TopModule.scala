@@ -29,13 +29,14 @@ class MarkoRvCore extends Module {
     val register_file = Module(new RegFile)
     val write_back = Module(new WriteBack)
 
-    instr_fetch_unit.io.pc_in := 0.U(64.W)
-    instr_fetch_unit.io.set_pc := false.B
+    instr_fetch_unit.io.pc_in <> branch_unit.io.rev_pc
+    instr_fetch_unit.io.set_pc <> branch_unit.io.flush
     instr_fetch_unit.io.fetch_bundle <> instr_fetch_queue.io.fetch_bundle
 
     instr_cache.io.mem_read_addr <> mem.io.port2.read_addr
     instr_cache.io.mem_read_data <> mem.io.port2.data_out
 
+    instr_fetch_queue.io.flush <> branch_unit.io.flush
     instr_fetch_queue.io.read_addr <> instr_cache.io.read_addr
     instr_fetch_queue.io.read_cache_line <> instr_cache.io.read_cache_line
     instr_fetch_queue.io.pc <> instr_fetch_unit.io.peek_pc
@@ -75,15 +76,15 @@ class MarkoRvCore extends Module {
     write_back.io.reg_write3 <> register_file.io.write_addr3
     write_back.io.write_data3 <> register_file.io.write_data3
 
-    PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, instr_decoder.io.outfire, false.B)
+    PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, instr_decoder.io.outfire, branch_unit.io.flush)
 
-    PipelineConnect(instr_decoder.io.alu_out, arithmetic_logic_unit.io.alu_instr, true.B , false.B)
-    PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, load_store_unit.io.state_peek === 0.U , false.B)
-    PipelineConnect(instr_decoder.io.branch_out, branch_unit.io.branch_instr, true.B , false.B)
+    PipelineConnect(instr_decoder.io.alu_out, arithmetic_logic_unit.io.alu_instr, true.B , branch_unit.io.flush)
+    PipelineConnect(instr_decoder.io.lsu_out, load_store_unit.io.lsu_instr, load_store_unit.io.state_peek === 0.U , branch_unit.io.flush)
+    PipelineConnect(instr_decoder.io.branch_out, branch_unit.io.branch_instr, true.B , branch_unit.io.flush)
 
-    PipelineConnect(load_store_unit.io.write_back, write_back.io.write_back1, write_back.io.outfire1, false.B)
-    PipelineConnect(arithmetic_logic_unit.io.write_back, write_back.io.write_back2, write_back.io.outfire2, false.B)
-    PipelineConnect(branch_unit.io.write_back, write_back.io.write_back3, write_back.io.outfire3, false.B)
+    PipelineConnect(load_store_unit.io.write_back, write_back.io.write_back1, write_back.io.outfire1, branch_unit.io.flush)
+    PipelineConnect(arithmetic_logic_unit.io.write_back, write_back.io.write_back2, write_back.io.outfire2, branch_unit.io.flush)
+    PipelineConnect(branch_unit.io.write_back, write_back.io.write_back3, write_back.io.outfire3, branch_unit.io.flush)
 }
 
 object MarkoRvCore extends App {

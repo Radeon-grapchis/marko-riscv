@@ -37,6 +37,26 @@ class BranchUnit extends Module {
                 io.write_back.bits.reg := io.branch_instr.bits.params.rd
                 io.write_back.bits.data := io.branch_instr.bits.params.pc + 4.U
             }
+            is("b00000".U) {
+                // beq
+                when(io.branch_instr.bits.params.source1 === io.branch_instr.bits.params.source2) {
+                    io.flush := ~io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }.otherwise {
+                    io.flush := io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }
+            }
+            is("b00010".U) {
+                // bne
+                when(io.branch_instr.bits.params.source1 =/= io.branch_instr.bits.params.source2) {
+                    io.flush := ~io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }.otherwise {
+                    io.flush := io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }
+            }
         }
     }
 }
