@@ -63,10 +63,10 @@
 - [ ] jalr
 - [x] beq
 - [x] bne
-- [ ] blt
-- [ ] bge
-- [ ] bltu
-- [ ] bgeu
+- [x] blt
+- [x] bge
+- [x] bltu
+- [x] bgeu
 </details>
 
 <details>

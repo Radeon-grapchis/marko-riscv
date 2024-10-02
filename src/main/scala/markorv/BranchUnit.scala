@@ -57,6 +57,46 @@ class BranchUnit extends Module {
                     io.rev_pc := io.branch_instr.bits.recovery_pc
                 }
             }
+            is("b01000".U) {
+                // blt
+                when(io.branch_instr.bits.params.source1.asSInt < io.branch_instr.bits.params.source2.asSInt) {
+                    io.flush := ~io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }.otherwise {
+                    io.flush := io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }
+            }
+            is("b01010".U) {
+                // bge
+                when(io.branch_instr.bits.params.source1.asSInt >= io.branch_instr.bits.params.source2.asSInt) {
+                    io.flush := ~io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }.otherwise {
+                    io.flush := io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }
+            }
+            is("b01100".U) {
+                // bltu
+                when(io.branch_instr.bits.params.source1 < io.branch_instr.bits.params.source2) {
+                    io.flush := ~io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }.otherwise {
+                    io.flush := io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }
+            }
+            is("b01100".U) {
+                // bgeu
+                when(io.branch_instr.bits.params.source1 >= io.branch_instr.bits.params.source2) {
+                    io.flush := ~io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }.otherwise {
+                    io.flush := io.branch_instr.bits.pred_taken
+                    io.rev_pc := io.branch_instr.bits.recovery_pc
+                }
+            }
         }
     }
 }
