@@ -1,4 +1,4 @@
-jal main
+j main
 fibonacci:
         addi    sp,sp,-48
         sd      ra,40(sp)
@@ -24,14 +24,14 @@ fibonacci:
         addiw   a5,a5,-1
         sext.w  a5,a5
         mv      a0,a5
-        call    fibonacci
+        jal     fibonacci
         mv      a5,a0
         mv      s1,a5
         lw      a5,-36(s0)
         addiw   a5,a5,-2
         sext.w  a5,a5
         mv      a0,a5
-        call    fibonacci
+        jal     fibonacci
         mv      a5,a0
         addw    a5,s1,a5
         sext.w  a5,a5
@@ -45,6 +45,6 @@ fibonacci:
 
 main:
         li    sp,2047
-        li    a0, 4
-        call  fibonacci
+        li    a0, 2
+        jal   fibonacci
         sd    a0,1016(x0)

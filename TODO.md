@@ -57,10 +57,10 @@
 </details>
 
 <details>
-<summary><strong> Control Instructions </strong></summary>
+<summary><strong> Control Instructions </strong>✅</summary>
 
 - [x] jal
-- [ ] jalr
+- [x] jalr
 - [x] beq
 - [x] bne
 - [x] blt

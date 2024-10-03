@@ -25,19 +25,50 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
 
     // Initialize the memory with initial values
     val init_values = Seq(
-        "h01000113".U(32.W),
-        "h3e100c23".U(32.W),
-        "h00108093".U(32.W),
-        "h00000013".U(32.W),
-        "h00100013".U(32.W),
-        "h00200013".U(32.W),
-        "h00300013".U(32.W),
-        "h00400013".U(32.W),
-        "h00500013".U(32.W),
-        "h00600013".U(32.W),
-        "h00700013".U(32.W),
-        "hfc209ce3".U(32.W),
-        "h3e000c23".U(32.W),
+        "h0a00006f".U(32.W), //0x0
+        "hfd010113".U(32.W), //0x4
+        "h02113423".U(32.W), //0x8
+        "h02813023".U(32.W), //0xc
+        "h00913c23".U(32.W), //0x10
+        "h03010413".U(32.W), //0x14
+        "h00050793".U(32.W), //0x18
+        "hfcf42e23".U(32.W), //0x1c
+        "hfdc42783".U(32.W), //0x20
+        "h0007879b".U(32.W), //0x24
+        "h00079663".U(32.W), //0x28
+        "h00000793".U(32.W), //0x2c
+        "h0580006f".U(32.W), //0x30
+        "hfdc42783".U(32.W), //0x34
+        "h0007871b".U(32.W), //0x38
+        "h00100793".U(32.W), //0x3c
+        "h00f71663".U(32.W), //0x40
+        "h00100793".U(32.W), //0x44
+        "h0400006f".U(32.W), //0x48
+        "hfdc42783".U(32.W), //0x4c
+        "hfff7879b".U(32.W), //0x50
+        "h0007879b".U(32.W), //0x54
+        "h00078513".U(32.W), //0x58
+        "hfa9ff0ef".U(32.W), //0x5c
+        "h00050793".U(32.W), //0x60
+        "h00078493".U(32.W), //0x64
+        "hfdc42783".U(32.W), //0x68
+        "hffe7879b".U(32.W), //0x6c
+        "h0007879b".U(32.W), //0x70
+        "h00078513".U(32.W), //0x74
+        "hf8dff0ef".U(32.W), //0x78
+        "h00050793".U(32.W), //0x7c
+        "h00f487bb".U(32.W), //0x80
+        "h0007879b".U(32.W), //0x84
+        "h00078513".U(32.W), //0x88
+        "h02813083".U(32.W), //0x8c
+        "h02013403".U(32.W), //0x90
+        "h01813483".U(32.W), //0x94
+        "h03010113".U(32.W), //0x98
+        "h00008067".U(32.W), //0x9c
+        "h7ff00113".U(32.W), //0xa0
+        "h00400513".U(32.W), //0xa4
+        "hf5dff0ef".U(32.W), //0xa8
+        "h3ea03c23".U(32.W), //0xac
     )
 
     // Little endian initialization
@@ -57,14 +88,22 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
     val arbiterOut = Wire(Bool())
     arbiterOut := arbiter.io.out.ready
     arbiter.io.out.ready := true.B
-
-    val port1_last_read_addr = RegInit(0.U(data_width.W))
-    val port2_last_read_addr = RegInit(0.U(data_width.W))
-    val port1_last_read_data = RegInit(0.U(data_width.W))
-    val port2_last_read_data = RegInit(0.U(data_width.W))
-    val port1_read_available = RegInit(false.B)
-    val port2_read_available = RegInit(false.B)
+    
     val mem_available = RegInit(false.B)
+
+    val last_read_addr1 = RegInit(0.U(addr_width.W))
+    val read_data1 = Wire(Vec(data_width / 8, UInt(8.W)))
+    for (i <- 0 until data_width / 8) {
+        read_data1(i) := mem.read(io.port1.read_addr.bits + i.U)
+    }
+    val last_read_addr2 = RegInit(0.U(addr_width.W))
+    val read_data2 = Wire(Vec(data_width / 8, UInt(8.W)))
+    for (i <- 0 until data_width / 8) {
+        read_data2(i) := mem.read(io.port2.read_addr.bits + i.U)
+    }
+
+    last_read_addr1 := io.port1.read_addr.bits
+    last_read_addr2 := io.port2.read_addr.bits
 
     io.port1.read_addr.ready := mem_available
     io.port1.data_out.bits := 0.U
@@ -103,20 +142,11 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
                 }
             }
             io.port1.write_outfire := true.B
-            port2_read_available := false.B
         }.elsewhen(io.port1.data_out.ready && mem_available) {
             // Read from SyncReadMem, data available in the next cycle
-            val read_data = Wire(Vec(data_width / 8, UInt(8.W)))
-            for (i <- 0 until data_width / 8) {
-                read_data(i) := mem.read(io.port1.read_addr.bits + i.U)
-            }
-            io.port1.data_out.bits := Cat(read_data.reverse)
-            port1_last_read_addr := io.port1.read_addr.bits
-            port2_read_available := false.B
-            when(port1_last_read_addr === io.port1.read_addr.bits && port1_read_available) {
+            when(io.port1.read_addr.bits === last_read_addr1) {
                 io.port1.data_out.valid := true.B
-            }.elsewhen(port1_last_read_addr === io.port1.read_addr.bits) {
-                port1_read_available := true.B
+                io.port1.data_out.bits := Cat(read_data1.reverse)
             }
         }.elsewhen(io.port1.data_out.ready) {
             mem_available := true.B
@@ -147,20 +177,11 @@ class Memory(data_width: Int = 64, addr_width: Int = 64, size: Int = 128) extend
                 }
             }
             io.port2.write_outfire := true.B
-            port1_read_available := false.B
         }.elsewhen(io.port2.data_out.ready && mem_available) {
             // Read from SyncReadMem, data available in the next cycle
-            val read_data = Wire(Vec(data_width / 8, UInt(8.W)))
-            for (i <- 0 until data_width / 8) {
-                read_data(i) := mem.read(io.port2.read_addr.bits + i.U)
-            }
-            io.port2.data_out.bits := Cat(read_data.reverse)
-            port2_last_read_addr := io.port2.read_addr.bits
-            port1_read_available := false.B
-            when (port2_last_read_addr === io.port2.read_addr.bits && port2_read_available) {
+            when(io.port2.read_addr.bits === last_read_addr2) {
                 io.port2.data_out.valid := true.B
-            }.elsewhen(port2_last_read_addr === io.port2.read_addr.bits) {
-                port2_read_available := true.B
+                io.port2.data_out.bits := Cat(read_data2.reverse)
             }
         }.elsewhen(io.port2.data_out.ready) {
             mem_available := true.B

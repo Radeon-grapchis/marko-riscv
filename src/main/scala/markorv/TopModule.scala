@@ -15,7 +15,7 @@ class MarkoRvCore extends Module {
         val peek = Output(UInt(64.W))
     })
 
-    val mem = Module(new Memory(64, 64, 1024))
+    val mem = Module(new Memory(64, 64, 2048))
     val instr_cache = Module(new Cache(8, 4, 16, 64))
 
     val instr_fetch_queue = Module(new InstrFetchQueue)
@@ -75,6 +75,8 @@ class MarkoRvCore extends Module {
     write_back.io.write_data2 <> register_file.io.write_data2
     write_back.io.reg_write3 <> register_file.io.write_addr3
     write_back.io.write_data3 <> register_file.io.write_data3
+
+    register_file.io.flush := branch_unit.io.flush
 
     PipelineConnect(instr_fetch_unit.io.instr_bundle, instr_decoder.io.instr_bundle, instr_decoder.io.outfire, branch_unit.io.flush)
 

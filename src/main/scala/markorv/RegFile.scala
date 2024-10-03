@@ -23,6 +23,7 @@ class RegFile(data_width: Int = 64) extends Module {
         val acquired = Output(Bool())
 
         val peek_occupied = Output(UInt(32.W))
+        val flush = Input(Bool())
     })
     val reg_acquire_flags = RegInit(0.U(32.W))
     val reg_acquire_flags_next1 = Wire(UInt(32.W))
@@ -66,5 +67,9 @@ class RegFile(data_width: Int = 64) extends Module {
         io.acquired := true.B
     }.otherwise {
         reg_acquire_flags := reg_acquire_flags_next3
+    }
+
+    when(io.flush) {
+        reg_acquire_flags := 0.U
     }
 }

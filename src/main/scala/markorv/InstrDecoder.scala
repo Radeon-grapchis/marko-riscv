@@ -106,7 +106,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
             is("b0110111".U) {
                 // lui
                 io.alu_out.bits.alu_opcode := 1.U
-                io.alu_out.bits.params.source1 := instr(31,12) << 12
+                io.alu_out.bits.params.source1 := (instr(31,12) << 12).asSInt.pad(64).asUInt
                 io.alu_out.bits.params.source2 := 0.U
                 io.alu_out.bits.params.rd := instr(11,7)
 
@@ -118,7 +118,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
             is("b0010111".U) {
                 // auipc
                 io.alu_out.bits.alu_opcode := 1.U
-                io.alu_out.bits.params.source1 := instr(31,12) << 12
+                io.alu_out.bits.params.source1 := (instr(31,12) << 12).asSInt.pad(64).asUInt
                 io.alu_out.bits.params.source2 := pc
                 io.alu_out.bits.params.rd := instr(11,7)
 
@@ -257,7 +257,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 occupied_reg := io.occupied_regs(instr(19,15))
 
                 io.lsu_out.bits.lsu_opcode := Cat(0.U(2.W), instr(14,12))
-                io.lsu_out.bits.params.immediate := instr(31,20)
+                io.lsu_out.bits.params.immediate := instr(31,20).asSInt.pad(64).asUInt
                 io.lsu_out.bits.params.source1 := io.reg_data1
                 io.lsu_out.bits.params.source2 := 0.U(data_width.W)
                 io.lsu_out.bits.params.rd := instr(11,7)
@@ -275,7 +275,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 occupied_reg := io.occupied_regs(instr(19,15)) | io.occupied_regs(instr(24,20))
 
                 io.lsu_out.bits.lsu_opcode := Cat("b10".U, instr(14,12))
-                io.lsu_out.bits.params.immediate := Cat(instr(31,25),instr(11,7))
+                io.lsu_out.bits.params.immediate := Cat(instr(31,25),instr(11,7)).asSInt.pad(64).asUInt
                 io.lsu_out.bits.params.source1 := io.reg_data1
                 io.lsu_out.bits.params.source2 := io.reg_data2
                 io.lsu_out.bits.params.rd := 0.U(5.W)
@@ -288,6 +288,7 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
                 io.branch_out.bits.branch_opcode := "b00001".U
                 io.branch_out.bits.pred_taken := io.instr_bundle.bits.pred_taken
                 io.branch_out.bits.recovery_pc := io.instr_bundle.bits.recovery_pc
+                io.branch_out.bits.params.pc := pc
                 io.branch_out.bits.params.rd := instr(11,7)
 
                 acquire_reg := instr(11,7)
@@ -297,7 +298,24 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
             }
             is("b1100111".U) {
                 // jalr
-                // TODO
+                io.reg_read1 := instr(19,15)
+                
+                occupied_reg := io.occupied_regs(instr(19,15))
+                
+                io.branch_out.bits.branch_opcode := "b00011".U
+                io.branch_out.bits.pred_taken := io.instr_bundle.bits.pred_taken
+                io.branch_out.bits.pred_pc := io.instr_bundle.bits.pred_pc
+                io.branch_out.bits.recovery_pc := io.instr_bundle.bits.recovery_pc
+                io.branch_out.bits.params.pc := pc
+                io.branch_out.bits.params.rd := instr(11,7)
+
+                io.branch_out.bits.params.source1 := io.reg_data1
+                io.branch_out.bits.params.immediate := instr(31,20).asSInt.pad(64).asUInt
+
+                acquire_reg := instr(11,7)
+
+                valid_instr := true.B
+                instr_for := 2.U
             }
             is("b1100011".U) {
                 // branch
@@ -307,11 +325,11 @@ class InstrDecoder(data_width: Int = 64, addr_width: Int = 64) extends Module {
 
                 io.branch_out.bits.branch_opcode := Cat(0.U,instr(14,12),0.U)
                 io.branch_out.bits.pred_taken := io.instr_bundle.bits.pred_taken
+                io.branch_out.bits.pred_pc := io.instr_bundle.bits.pred_pc
                 io.branch_out.bits.recovery_pc := io.instr_bundle.bits.recovery_pc
                 
                 io.branch_out.bits.params.source1 := io.reg_data1
                 io.branch_out.bits.params.source2 := io.reg_data2
-                io.branch_out.bits.pred_pc := io.instr_bundle.bits.pred_pc
 
                 valid_instr := true.B
                 instr_for := 2.U

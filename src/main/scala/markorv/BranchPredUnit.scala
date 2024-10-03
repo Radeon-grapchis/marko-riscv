@@ -33,10 +33,9 @@ class BranchPredUnit extends Module {
         }
         is("b1100111".U) {
             // jalr
-            // TODO
             io.bpu_result.is_branch := true.B
             io.bpu_result.pred_taken := true.B
-            io.bpu_result.pred_pc := 0.U
+            io.bpu_result.pred_pc := io.bpu_instr.pc + 4.U
             io.bpu_result.recovery_pc := io.bpu_instr.pc + 4.U
         }
         is("b1100011".U) {

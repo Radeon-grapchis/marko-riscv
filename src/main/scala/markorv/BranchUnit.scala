@@ -38,6 +38,15 @@ class BranchUnit extends Module {
                 io.write_back.bits.reg := io.branch_instr.bits.params.rd
                 io.write_back.bits.data := io.branch_instr.bits.params.pc + 4.U
             }
+            is("b00011".U) {
+                // jalr
+                io.write_back.valid := true.B
+                io.write_back.bits.reg := io.branch_instr.bits.params.rd
+                io.write_back.bits.data := io.branch_instr.bits.params.pc + 4.U
+                
+                io.flush := true.B
+                io.rev_pc := (io.branch_instr.bits.params.source1 + io.branch_instr.bits.params.immediate) & ~(1.U(64.W))
+            }
             is("b00000".U) {
                 // beq
                 when(io.branch_instr.bits.params.source1 === io.branch_instr.bits.params.source2) {
