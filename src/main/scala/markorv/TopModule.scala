@@ -52,7 +52,7 @@ class MarkoRvCore extends Module {
     io.instr_now <> instr_fetch_unit.io.instr_bundle.bits.instr
 
     io.peek <> mem.io.peek
-
+    
     instr_decoder.io.reg_read1 <> register_file.io.read_addr1
     instr_decoder.io.reg_read2 <> register_file.io.read_addr2
     instr_decoder.io.reg_data1 <> register_file.io.read_data1

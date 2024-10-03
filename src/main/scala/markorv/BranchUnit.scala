@@ -7,8 +7,9 @@ class BranchUnit extends Module {
     val io = IO(new Bundle {
         val branch_instr = Flipped(Decoupled(new Bundle {
             val branch_opcode = UInt(5.W)
-            val recovery_pc = UInt(64.W)
             val pred_taken = Bool()
+            val pred_pc = UInt(64.W)
+            val recovery_pc = UInt(64.W)
             val params = new DecoderOutParams
         }))
 
@@ -32,7 +33,7 @@ class BranchUnit extends Module {
     when(io.branch_instr.valid) {
         switch(io.branch_instr.bits.branch_opcode) {
             is("b00001".U) {
-                // Set rd here.
+                // jal
                 io.write_back.valid := true.B
                 io.write_back.bits.reg := io.branch_instr.bits.params.rd
                 io.write_back.bits.data := io.branch_instr.bits.params.pc + 4.U
